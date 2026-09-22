@@ -1707,6 +1707,7 @@ async function webSearchResults(query) {
 
 // Return formatted text — buat AI context (chat/aiReply)
 async function webSearch(query) {
+  return ''; // SUMBER DINONAKTIFKAN (request Tuan Isaac): jangan inject hasil web ke prompt chat; webSearchResults tetap dipakai /api/search
   const results = await webSearchResults(query);
   if (!results.length) return '';
   return results.map(r => '• ' + r.title + '\n  ' + r.url + '\n  ' + r.snippet).join('\n');
