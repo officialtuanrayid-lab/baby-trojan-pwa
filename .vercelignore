@@ -1,0 +1,14 @@
+*.bak
+*.bak2
+*.tmp
+node_modules
+.vercel
+__pycache__
+PYEOF
+
+echo "✅ Vercel structure ready"
+
+# Push updated files to GitHub
+git add -A
+git -c user.name="officialtuanrayid-lab" -c user.email="officialtuanrayid@users.noreply.github.com" commit -m "Add Vercel serverless API + config" 2>&1 | tail -3
+git push 2>&1 | tail -3

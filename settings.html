@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0f">
+<title>Adaptia - Settings</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#0a0a0f;--card:#12121a;--input:#1a1a2e;
+--accent:#00d4aa;--accent2:#7c3aed;--text:#e0e0e0;
+--dim:#6b7280;--safe:env(safe-area-inset-top,0px);
+}
+body{
+font-family:system-ui,-apple-system,sans-serif;
+background:var(--bg);color:var(--text);
+min-height:100dvh;padding:var(--safe) 0 20px;
+}
+.header{
+background:linear-gradient(135deg,#0a0a0f,#1a1a2e);
+padding:16px;display:flex;align-items:center;gap:12px;
+border-bottom:1px solid rgba(0,212,170,0.15);
+position:sticky;top:0;z-index:10;
+}
+.back-btn{
+background:none;border:none;color:var(--accent);
+font-size:20px;cursor:pointer;padding:8px;
+}
+.header h1{font-size:18px;font-weight:700}
+.content{padding:16px;display:flex;flex-direction:column;gap:16px}
+.section{
+background:var(--card);border-radius:16px;
+padding:20px;border:1px solid rgba(255,255,255,0.05);
+}
+.section-title{
+font-size:13px;font-weight:700;color:var(--accent);
+text-transform:uppercase;letter-spacing:1px;
+margin-bottom:16px;display:flex;align-items:center;gap:8px;
+}
+.field{margin-bottom:16px}
+.field:last-child{margin-bottom:0}
+.field label{
+display:block;font-size:13px;color:var(--dim);
+margin-bottom:8px;font-weight:500;
+}
+.field input[type="text"],
+.field input[type="number"],
+.field select{
+width:100%;padding:12px 16px;border-radius:12px;
+background:var(--input);border:1px solid rgba(255,255,255,0.08);
+color:var(--text);font-size:15px;font-family:inherit;
+outline:none;transition:border-color 0.2s;
+}
+.field input:focus,.field select:focus{border-color:var(--accent)}
+/* Color picker row */
+.color-row{display:flex;gap:10px;flex-wrap:wrap}
+.color-opt{
+width:40px;height:40px;border-radius:50%;cursor:pointer;
+border:3px solid transparent;transition:all 0.2s;
+position:relative;
+}
+.color-opt.active{border-color:#fff;transform:scale(1.15)}
+.color-opt::after{
+content:'✓';position:absolute;inset:0;
+display:flex;align-items:center;justify-content:center;
+color:#fff;font-weight:700;opacity:0;font-size:14px;
+}
+.color-opt.active::after{opacity:1}
+/* Toggle switch */
+.toggle-row{
+display:flex;align-items:center;justify-content:space-between;
+padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.toggle-row:last-child{border:none}
+.toggle-label{font-size:14px}
+.toggle-desc{font-size:11px;color:var(--dim);margin-top:2px}
+.toggle{
+width:48px;height:28px;border-radius:14px;
+background:#333;cursor:pointer;position:relative;
+transition:background 0.3s;flex-shrink:0;
+}
+.toggle.on{background:var(--accent)}
+.toggle::after{
+content:'';width:22px;height:22px;border-radius:50%;
+background:#fff;position:absolute;top:3px;left:3px;
+transition:transform 0.3s;box-shadow:0 2px 4px rgba(0,0,0,0.3);
+}
+.toggle.on::after{transform:translateX(20px)}
+/* Range slider */
+.range-wrap{display:flex;align-items:center;gap:12px}
+.range{
+flex:1;-webkit-appearance:none;height:6px;
+border-radius:3px;background:#333;outline:none;
+}
+.range::-webkit-slider-thumb{
+-webkit-appearance:none;width:20px;height:20px;
+border-radius:50%;background:var(--accent);cursor:pointer;
+box-shadow:0 0 10px rgba(0,212,170,0.3);
+}
+.range-val{
+font-size:13px;color:var(--accent);font-weight:600;
+min-width:36px;text-align:center;
+}
+/* Theme preview */
+.preview{
+background:var(--input);border-radius:16px;
+padding:20px;margin-top:12px;
+border:1px solid rgba(255,255,255,0.08);
+}
+.preview-header{
+display:flex;align-items:center;gap:10px;margin-bottom:12px;
+}
+.preview-avatar{
+width:36px;height:36px;border-radius:50%;
+display:flex;align-items:center;justify-content:center;
+font-size:18px;
+}
+.preview-name{font-weight:600;font-size:14px}
+.preview-msgs{display:flex;flex-direction:column;gap:6px}
+.preview-bubble{
+padding:10px 14px;border-radius:16px;font-size:13px;
+max-width:80%;line-height:1.4;
+}
+.preview-bubble.user{
+align-self:flex-end;border-bottom-right-radius:4px;
+color:#000;font-weight:500;
+}
+.preview-bubble.bot{
+align-self:flex-start;border-bottom-left-radius:4px;
+background:rgba(255,255,255,0.08);
+}
+/* Save button */
+.save-btn{
+width:100%;padding:16px;border:none;border-radius:14px;
+background:linear-gradient(135deg,var(--accent),var(--accent2));
+color:#000;font-size:16px;font-weight:700;
+cursor:pointer;margin-top:8px;
+transition:transform 0.15s;
+}
+.save-btn:active{transform:scale(0.98)}
+.reset-btn{
+width:100%;padding:14px;border:1px solid rgba(255,255,255,0.1);
+border-radius:14px;background:none;color:var(--dim);
+font-size:14px;cursor:pointer;margin-top:8px;
+}
+.toast{
+position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);
+background:var(--accent);color:#000;padding:12px 24px;
+border-radius:12px;font-weight:600;font-size:14px;
+transition:transform 0.3s;z-index:100;
+box-shadow:0 8px 30px rgba(0,212,170,0.3);
+}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+.img-pick-item{
+width:80px;height:80px;border-radius:12px;border:2px dashed rgba(255,255,255,0.15);
+display:flex;flex-direction:column;align-items:center;justify-content:center;
+cursor:pointer;transition:all 0.2s;background:var(--input);position:relative;overflow:hidden}
+.img-pick-item:active{transform:scale(0.95)}
+.img-pick-item img{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0}
+.img-pick-item .img-pick-label{font-size:10px;color:var(--dim);z-index:1;text-align:center;line-height:1.2}
+.img-pick-item .img-pick-icon{font-size:20px;margin-bottom:2px;z-index:1}
+.img-pick-item.has-img{border-style:solid;border-color:var(--accent)}
+.img-pick-item .img-remove{
+position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;
+background:rgba(239,68,68,0.9);color:#fff;font-size:10px;display:flex;
+align-items:center;justify-content:center;z-index:2;cursor:pointer}
+
+</style>
+</head>
+<body>
+
+<div class="header">
+<button class="back-btn" onclick="history.back()">←</button>
+<h1>⚙️ Customize Adaptia</h1>
+</div>
+
+<div class="content">
+
+<!-- Bot Name -->
+<div class="section">
+<div class="section-title">🤖 Bot Identity</div>
+<div class="field">
+<label>Nama Bot</label>
+<input type="text" id="botName" placeholder="Adaptia" maxlength="20">
+</div>
+<div class="field">
+<label>Sapaan ke Lo</label>
+<input type="text" id="userTitle" placeholder="Tuan Isaac" maxlength="20">
+</div>
+<div class="field">
+<label>Status Text</label>
+<input type="text" id="statusText" placeholder="Online" maxlength="30">
+</div>
+</div>
+
+<!-- Theme Colors -->
+<div class="section">
+<div class="section-title">🎨 Accent Color</div>
+<div class="color-row" id="accentColors">
+<div class="color-opt active" style="background:linear-gradient(135deg,#00d4aa,#00b894)" data-color="#00d4aa" data-color2="#00b894"></div>
+<div class="color-opt" style="background:linear-gradient(135deg,#7c3aed,#6d28d9)" data-color="#7c3aed" data-color2="#6d28d9"></div>
+<div class="color-opt" style="background:linear-gradient(135deg,#f59e0b,#f97316)" data-color="#f59e0b" data-color2="#f97316"></div>
+<div class="color-opt" style="background:linear-gradient(135deg,#ef4444,#dc2626)" data-color="#ef4444" data-color2="#dc2626"></div>
+<div class="color-opt" style="background:linear-gradient(135deg,#3b82f6,#2563eb)" data-color="#3b82f6" data-color2="#2563eb"></div>
+<div class="color-opt" style="background:linear-gradient(135deg,#ec4899,#db2777)" data-color="#ec4899" data-color2="#db2777"></div>
+<div class="color-opt" style="background:linear-gradient(135deg,#14b8a6,#0d9488)" data-color="#14b8a6" data-color2="#0d9488"></div>
+<div class="color-opt" style="background:linear-gradient(135deg,#f43f5e,#e11d48)" data-color="#f43f5e" data-color2="#e11d48"></div>
+<div class="color-opt" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed)" data-color="#8b5cf6" data-color2="#7c3aed"></div>
+<div class="color-opt" style="background:linear-gradient(135deg,#06b6d4,#0891b2)" data-color="#06b6d4" data-color2="#0891b2"></div>
+</div>
+</div>
+
+<!-- Theme Mode -->
+<div class="section">
+<div class="section-title">🌙 Theme Mode</div>
+<div class="color-row" id="themeModes">
+<div class="color-opt active" style="background:#0a0a0f;border:2px solid #333" data-theme="dark" title="Dark"></div>
+<div class="color-opt" style="background:#1a1a2e" data-theme="midnight" title="Midnight"></div>
+<div class="color-opt" style="background:#1e293b" data-theme="slate" title="Slate"></div>
+<div class="color-opt" style="background:#18181b" data-theme="zinc" title="Zinc"></div>
+<div class="color-opt" style="background:#0f172a" data-theme="navy" title="Navy"></div>
+</div>
+</div>
+
+<!-- Chat Style -->
+<div class="section">
+<div class="section-title">💬 Chat Style</div>
+<div class="field">
+<label>Bubble Style</label>
+<select id="bubbleStyle">
+<option value="rounded">Rounded (Default)</option>
+<option value="squircle">Squircle</option>
+<option value="minimal">Minimal</option>
+<option value="glass">Glassmorphism</option>
+</select>
+</div>
+<div class="field">
+<label>Font Size</label>
+<div class="range-wrap">
+<input type="range" class="range" id="fontSize" min="12" max="20" value="15">
+<span class="range-val" id="fontSizeVal">15px</span>
+</div>
+</div>
+<div class="field">
+<label>Chat Spacing</label>
+<div class="range-wrap">
+<input type="range" class="range" id="chatGap" min="4" max="16" value="8">
+<span class="range-val" id="chatGapVal">8px</span>
+</div>
+</div>
+</div>
+
+<!-- Effects -->
+<div class="section">
+<div class="section-title">✨ Effects</div>
+<div class="toggle-row">
+<div>
+<div class="toggle-label">Sound Effects</div>
+<div class="toggle-desc">Suara saat kirim & terima pesan</div>
+</div>
+<div class="toggle on" id="toggleSound" onclick="toggleSwitch(this)"></div>
+</div>
+<div class="toggle-row">
+<div>
+<div class="toggle-label">Message Animation</div>
+<div class="toggle-desc">Animasi bubble saat pesan muncul</div>
+</div>
+<div class="toggle on" id="toggleAnim" onclick="toggleSwitch(this)"></div>
+</div>
+<div class="toggle-row">
+<div>
+<div class="toggle-label">Haptic Feedback</div>
+<div class="toggle-desc">Getar saat kirim pesan</div>
+</div>
+<div class="toggle on" id="toggleHaptic" onclick="toggleSwitch(this)"></div>
+</div>
+<div class="toggle-row">
+<div>
+<div class="toggle-label">Typing Indicator</div>
+<div class="toggle-desc">Animasi "mengetik" saat AI membalas</div>
+</div>
+<div class="toggle on" id="toggleTyping" onclick="toggleSwitch(this)"></div>
+</div>
+</div>
+
+<!-- Background -->
+<div class="section">
+<div class="section-title">🖼️ Background</div>
+<div class="color-row" id="bgModes">
+<div class="color-opt active" style="background:#0a0a0f;border:2px solid #333" data-bg="solid" title="Solid"></div>
+<div class="color-opt" style="background:linear-gradient(135deg,#0a0a0f,#1a1a2e)" data-bg="gradient" title="Gradient"></div>
+<div class="color-opt" style="background:repeating-conic-gradient(#1a1a2e 0% 25%, #12121a 0% 50%) 0 0/20px 20px" data-bg="pattern" title="Pattern"></div>
+<div class="color-opt" style="background:linear-gradient(135deg,#0f0c29,#302b63,#24243e)" data-bg="cosmic" title="Cosmic"></div>
+</div>
+</div>
+
+
+<!-- Live Preview -->
+<div class="section">
+<div class="section-title">👁️ Live Preview</div>
+<div class="preview" id="preview">
+<div class="preview-header">
+<div class="preview-avatar" id="prevAvatar" style="background:linear-gradient(135deg,#00d4aa,#7c3aed)">🤖</div>
+<div class="preview-name" id="prevName">Adaptia</div>
+</div>
+<div class="preview-msgs" id="prevMsgs">
+<div class="preview-bubble bot">Halo Tuan Isaac! Ada yang bisa dibantu? 😎</div>
+<div class="preview-bubble user">Baby, tolong cari tutorial Godot 4</div>
+<div class="preview-bubble bot">Siap cuy! Gue cariin sekarang... 🔍</div>
+</div>
+</div>
+</div>
+
+<!-- Buttons -->
+<button class="save-btn" onclick="saveSettings()">💾 Save Settings</button>
+<button class="reset-btn" onclick="resetSettings()">🔄 Reset to Default</button>
+
+</div>
+
+<div class="toast" id="toast">✅ Settings saved!</div>
+
+<script>
+const STORAGE_KEY = 'bt-ui-settings';
+
+// Defaults
+const defaults = {
+  botName: 'Adaptia',
+  userTitle: 'Tuan Isaac',
+  statusText: 'Online',
+  accent: '#00d4aa',
+  accent2: '#00b894',
+  theme: 'dark',
+  bubbleStyle: 'rounded',
+  fontSize: 15,
+  chatGap: 8,
+  sound: true,
+  anim: true,
+  haptic: true,
+  typing: true,
+  bg: 'solid'
+};
+
+let settings = {...defaults};
+
+// Load saved settings
+function loadSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (saved) settings = {...defaults, ...saved};
+  } catch {}
+  applySettings();
+  populateFields();
+}
+
+function populateFields() {
+  document.getElementById('botName').value = settings.botName;
+  document.getElementById('userTitle').value = settings.userTitle;
+  document.getElementById('statusText').value = settings.statusText;
+  document.getElementById('fontSize').value = settings.fontSize;
+  document.getElementById('fontSizeVal').textContent = settings.fontSize + 'px';
+  document.getElementById('chatGap').value = settings.chatGap;
+  document.getElementById('chatGapVal').textContent = settings.chatGap + 'px';
+  document.getElementById('bubbleStyle').value = settings.bubbleStyle;
+
+  // Accent
+  document.querySelectorAll('#accentColors .color-opt').forEach(el => {
+    el.classList.toggle('active', el.dataset.color === settings.accent);
+  });
+  // Theme
+  document.querySelectorAll('#themeModes .color-opt').forEach(el => {
+    el.classList.toggle('active', el.dataset.theme === settings.theme);
+  });
+  // BG
+  document.querySelectorAll('#bgModes .color-opt').forEach(el => {
+    el.classList.toggle('active', el.dataset.bg === settings.bg);
+  });
+  // Toggles
+  document.getElementById('toggleSound').className = 'toggle' + (settings.sound ? ' on' : '');
+  document.getElementById('toggleAnim').className = 'toggle' + (settings.anim ? ' on' : '');
+  document.getElementById('toggleHaptic').className = 'toggle' + (settings.haptic ? ' on' : '');
+  document.getElementById('toggleTyping').className = 'toggle' + (settings.typing ? ' on' : '');
+}
+
+function applySettings() {
+  document.documentElement.style.setProperty('--accent', settings.accent);
+  document.documentElement.style.setProperty('--accent2', settings.accent2);
+
+  // Preview
+  document.getElementById('prevAvatar').style.background = 
+    `linear-gradient(135deg,${settings.accent},${settings.accent2})`;
+  document.getElementById('prevName').textContent = settings.botName;
+
+  const msgs = document.getElementById('prevMsgs').children;
+  if (msgs[0]) msgs[0].textContent = `Halo ${settings.userTitle}! Ada yang bisa dibantu? 😎`;
+  if (msgs[1]) msgs[1].textContent = `Baby, tolong cari tutorial Godot 4`;
+  if (msgs[2]) msgs[2].textContent = `Siap cuy! Gue cariin sekarang... 🔍`;
+
+  // Bubble style
+  const bubs = document.querySelectorAll('.preview-bubble');
+  bubs.forEach(b => {
+    b.style.fontSize = settings.fontSize + 'px';
+    switch(settings.bubbleStyle) {
+      case 'squircle': b.style.borderRadius = '20px'; break;
+      case 'minimal': b.style.borderRadius = '4px'; break;
+      case 'glass': b.style.borderRadius = '16px'; b.style.background = 'rgba(255,255,255,0.08)'; b.style.backdropFilter = 'blur(10px)'; break;
+      default: b.style.borderRadius = '16px'; b.style.backdropFilter = '';
+    }
+  });
+  document.getElementById('prevMsgs').style.gap = settings.chatGap + 'px';
+
+  // Background
+  const body = document.body;
+  switch(settings.bg) {
+    case 'gradient': body.style.background = 'linear-gradient(135deg,#0a0a0f,#1a1a2e)'; break;
+    case 'pattern': body.style.background = `repeating-conic-gradient(#1a1a2e 0% 25%, #12121a 0% 50%) 0 0/20px 20px`; break;
+    case 'cosmic': body.style.background = 'linear-gradient(135deg,#0f0c29,#302b63,#24243e)'; break;
+    default: body.style.background = 'var(--bg)';
+  }
+}
+
+// Event listeners
+document.querySelectorAll('#accentColors .color-opt').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('#accentColors .color-opt').forEach(e => e.classList.remove('active'));
+    el.classList.add('active');
+    settings.accent = el.dataset.color;
+    settings.accent2 = el.dataset.color2;
+    applySettings();
+  });
+});
+
+document.querySelectorAll('#themeModes .color-opt').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('#themeModes .color-opt').forEach(e => e.classList.remove('active'));
+    el.classList.add('active');
+    settings.theme = el.dataset.theme;
+  });
+});
+
+document.querySelectorAll('#bgModes .color-opt').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('#bgModes .color-opt').forEach(e => e.classList.remove('active'));
+    el.classList.add('active');
+    settings.bg = el.dataset.bg;
+    applySettings();
+  });
+});
+
+document.getElementById('fontSize').addEventListener('input', e => {
+  settings.fontSize = parseInt(e.target.value);
+  document.getElementById('fontSizeVal').textContent = settings.fontSize + 'px';
+  applySettings();
+});
+
+document.getElementById('chatGap').addEventListener('input', e => {
+  settings.chatGap = parseInt(e.target.value);
+  document.getElementById('chatGapVal').textContent = settings.chatGap + 'px';
+  applySettings();
+});
+
+document.getElementById('bubbleStyle').addEventListener('change', e => {
+  settings.bubbleStyle = e.target.value;
+  applySettings();
+});
+
+['botName','userTitle','statusText'].forEach(id => {
+  document.getElementById(id).addEventListener('input', e => {
+    settings[id] = e.target.value;
+    applySettings();
+  });
+});
+
+function toggleSwitch(el) {
+  el.classList.toggle('on');
+  const id = el.id.replace('toggle','').toLowerCase();
+  settings[id] = el.classList.contains('on');
+}
+
+function saveSettings() {
+  settings.botName = document.getElementById('botName').value || 'Adaptia';
+  settings.userTitle = document.getElementById('userTitle').value || 'Tuan Isaac';
+  settings.statusText = document.getElementById('statusText').value || 'Online';
+  
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  
+  const toast = document.getElementById('toast');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+  
+  // Auto-navigate back after save
+  setTimeout(function() { window.location.href = "/"; }, 1000);
+  // Notify parent chat window
+  if (window.opener) {
+    window.opener.postMessage({type: 'bt-settings', settings}, '*');
+  }
+}
+
+function resetSettings() {
+  settings = {...defaults};
+  localStorage.removeItem(STORAGE_KEY);
+  populateFields();
+  applySettings();
+}
+
+// Range input real-time update
+document.querySelectorAll('.range').forEach(r => {
+  r.addEventListener('input', () => r.dispatchEvent(new Event('change')));
+});
+
+
+// Image picker
+let currentPickKey = '';
+
+
+
+
+
+
+
+function removeImage(key) {
+  delete settings[key];
+  updateImagePreviews();
+}
+
+function updateImagePreviews() {
+  ['Avatar','Bg','Welcome','ChatAvatar'].forEach(name => {
+    const key = 'custom' + name;
+    const el = document.getElementById('pick' + name);
+    const existing = el.querySelector('img');
+    const removeBtn = el.querySelector('.img-remove');
+    
+    if (settings[key]) {
+      if (!existing) {
+        const img = document.createElement('img');
+        img.src = settings[key];
+        el.appendChild(img);
+        el.classList.add('has-img');
+        // Add remove button
+        const rm = document.createElement('div');
+        rm.className = 'img-remove';
+        rm.textContent = '✕';
+        rm.onclick = function(e) { e.stopPropagation(); removeImage(key); };
+        el.appendChild(rm);
+      } else {
+        existing.src = settings[key];
+      }
+    } else {
+      if (existing) existing.remove();
+      if (removeBtn) removeBtn.remove();
+      el.classList.remove('has-img');
+    }
+  });
+}
+
+
+loadSettings();
+updateImagePreviews();
+</script>
+</body>
+</html>

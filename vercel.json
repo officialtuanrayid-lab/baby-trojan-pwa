@@ -1,0 +1,28 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python",
+      "config": { "maxDuration": 30 }
+    },
+    {
+      "src": "!.env",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "^/api/(.*)$",
+      "dest": "api/index.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/"
+    }
+  ],
+  "outputDirectory": ".",
+  "env": {
+    "GEMINI_KEY": "AQ.Ab8RN6IQJ-uZl3TxlsVsS2yv04whQfB3lvRXPK5Yrq0fQxJDzg"
+  }
+}

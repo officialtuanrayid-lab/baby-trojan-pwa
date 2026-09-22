@@ -1,0 +1,11 @@
+name = "adaptia"
+main = "worker-current-live.js"
+compatibility_date = "2026-09-21"
+account_id = "90f83dd411034aaed5bad0c17576c159"
+
+kv_namespaces = [
+  { binding = "MEMORY_KV", id = "20eefddba7ec402792a007453fd153a5" }
+]
+
+[triggers]
+crons = ["* * * * *"]

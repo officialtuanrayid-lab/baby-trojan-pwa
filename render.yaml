@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: baby-trojan
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python3 web-server.py $PORT
+    envVars:
+      - key: GEMINI_KEY
+        sync: false
+      - key: PYTHON_VERSION
+        value: "3.11"

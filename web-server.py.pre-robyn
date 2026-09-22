@@ -1,0 +1,196 @@
+#!/usr/bin/env python3
+"""Adaptia Web Chat Server v3 — Render Compatible"""
+import json, time, os, sys, urllib.request, base64, subprocess, uuid, re, threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
+from urllib.parse import urlparse
+
+WEB_DIR = os.path.dirname(os.path.abspath(__file__))
+CONFIG = {}
+try:
+    CONFIG = json.load(open(os.path.join(WEB_DIR, "config.json")))
+except Exception:
+    pass
+
+# Support both env var and local file
+GEMINI_KEY = os.environ.get("GEMINI_KEY", "")
+if not GEMINI_KEY:
+    try:
+        local = "/root/.codex/telegram-bridge.json"
+        if os.path.exists(local):
+            GEMINI_KEY = json.load(open(local)).get("geminiKey", "")
+    except:
+        pass
+
+VOICE_DIR = os.path.join(WEB_DIR, "voices")
+os.makedirs(VOICE_DIR, exist_ok=True)
+TTS_VOICE = "id-ID-ArdiNeural"
+
+MIME = {'.html':'text/html','.css':'text/css','.js':'application/javascript',
+        '.json':'application/json','.png':'image/png','.svg':'image/svg+xml',
+        '.ico':'image/x-icon','.mp3':'audio/mpeg','.jpg':'image/jpeg',
+        '.jpeg':'image/jpeg','.webp':'image/webp','.woff2':'font/woff2'}
+
+def log(msg):
+    print(f"[{time.strftime('%H:%M:%S')}] {msg}", flush=True)
+
+def ai_reply(message, history=None):
+    context = CONFIG.get("systemContext") or """Kamu adalah Adaptia, AI partner pribadi untuk Tuan Isaac.
+- Panggil "Tuan Isaac" atau "cuy"
+- Gaya: santai, gaul, friendly, singkat padat
+- Gunakan emoji secukupnya
+- Jawab seperti manusia yang mengerti
+- Kalau ditanya sesuatu, langsung kasih jawaban
+- Panjang jawaban: 1-3 kalimat aja, jangan panjang"""
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key={GEMINI_KEY}"
+    contents = []
+    if history:
+        for h in history[-6:]:
+            role = "user" if h.get("role") == "user" else "model"
+            contents.append({"role": role, "parts": [{"text": h.get("text", "")}]})
+    contents.append({"role": "user", "parts": [{"text": message}]})
+    body = json.dumps({
+        "system_instruction": {"parts": [{"text": context}]},
+        "contents": contents,
+        "generationConfig": {"maxOutputTokens": 200, "temperature": 0.85}
+    }).encode()
+    req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=25) as resp:
+            data = json.loads(resp.read())
+            parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
+            if parts:
+                return parts[0].get("text", "").strip()
+    except Exception as e:
+        log(f"AI Error: {e}")
+    return "Gue error nih cuy, coba lagi! 😅"
+
+def generate_tts(text):
+    filename = f"tts_{uuid.uuid4().hex[:8]}.mp3"
+    filepath = os.path.join(VOICE_DIR, filename)
+    clean = re.sub(r'[^\w\s.,!?-]', '', text)
+    if len(clean) < 3:
+        return None
+    try:
+        subprocess.run(["edge-tts", "--voice", TTS_VOICE, "--text", clean, "--write-media", filepath],
+                       capture_output=True, timeout=15)
+        if os.path.exists(filepath) and os.path.getsize(filepath) > 100:
+            return filename
+    except Exception as e:
+        log(f"TTS Error: {e}")
+    return None
+
+class WebHandler(BaseHTTPRequestHandler):
+    def log_message(self, *a): pass
+
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
+
+    def do_GET(self):
+        path = urlparse(self.path).path
+        if path.startswith('/voices/'):
+            fp = os.path.join(VOICE_DIR, path.split('/')[-1])
+            if os.path.isfile(fp):
+                with open(fp, 'rb') as f: data = f.read()
+                self.send_response(200)
+                self.send_header('Content-Type', 'audio/mpeg')
+                self.send_header('Content-Length', len(data))
+                self.send_header('Cache-Control', 'public,max-age=3600')
+                self.end_headers(); self.wfile.write(data); return
+            self.send_error(404); return
+        if path == '/api/health':
+            self.send_json({'status': 'ok', 'voice': 'ready', 'tts': TTS_VOICE, 'gemini': bool(GEMINI_KEY)})
+            return
+        if path == '/manifest.json':
+            manifest = {
+                "name": CONFIG.get("name", "Adaptia"),
+                "short_name": CONFIG.get("short_name", "Adaptia"),
+                "description": CONFIG.get("description", "AI Partner Pribadi - Tuan Isaac"),
+                "start_url": "/",
+                "display": "fullscreen",
+                "orientation": "portrait",
+                "background_color": CONFIG.get("background_color", "#0a0a0f"),
+                "theme_color": CONFIG.get("theme_color", "#0a0a0f"),
+                "icons": [
+                    {"src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+                    {"src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+                ],
+                "categories": ["productivity"],
+                "lang": "id"
+            }
+            data = json.dumps(manifest, ensure_ascii=False).encode()
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Content-Length', len(data))
+            self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            self.end_headers()
+            self.wfile.write(data)
+            return
+        if path == '/': path = '/index.html'
+        fp = os.path.join(WEB_DIR, path.lstrip('/'))
+        if os.path.isfile(fp):
+            ext = os.path.splitext(fp)[1]; mime = MIME.get(ext, 'application/octet-stream')
+            with open(fp, 'rb') as f: data = f.read()
+            self.send_response(200)
+            self.send_header('Content-Type', mime)
+            self.send_header('Content-Length', len(data))
+            if ext == '.html': self.send_header('Cache-Control', 'no-cache')
+            self.end_headers(); self.wfile.write(data)
+        else: self.send_error(404)
+
+    def do_POST(self):
+        path = urlparse(self.path).path
+        body = json.loads(self.rfile.read(int(self.headers.get('Content-Length', 0))))
+        if path == '/api/health':
+            self.send_json({"status": "ok", "voice": "ready", "tts": TTS_VOICE}); return
+        if path == '/api/chat':
+            message = body.get("message", "").strip()
+            voice = body.get("voice", False)
+            if not message: self.send_json({"reply": "Kosong dong 😅"}); return
+            hf = os.path.join(WEB_DIR, 'webchat-history.json')
+            try:
+                with open(hf) as f: history = json.load(f)
+            except: history = []
+            reply = ai_reply(message, history)
+            history.append({"role": "user", "text": message, "time": time.time()})
+            history.append({"role": "bot", "text": reply, "time": time.time()})
+            history = history[-50:]
+            try:
+                with open(hf, 'w') as f: json.dump(history, f, ensure_ascii=False)
+            except: pass
+            resp = {"reply": reply, "time": time.time()}
+            if voice:
+                tts = generate_tts(reply)
+                if tts: resp["audio"] = f"/voices/{tts}"
+            self.send_json(resp); return
+        if path == '/api/greeting':
+            greetings = CONFIG.get("greetings") or [
+                "Yo Tuan Isaac! Ada yang bisa gue bantu cuy?",
+                "Halo Tuan Isaac! Mau ngomong apa nih?",
+                "Yo bro! Adaptia ready, speak!",
+            ]
+            import random
+            reply = random.choice(greetings)
+            resp = {"reply": reply}
+            tts = generate_tts(reply)
+            if tts: resp["audio"] = f"/voices/{tts}"
+            self.send_json(resp); return
+        self.send_error(404)
+
+    def send_json(self, data):
+        body = json.dumps(data, ensure_ascii=False).encode()
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Length', len(body))
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers(); self.wfile.write(body)
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 8767))
+    log(f"Adaptia WebChat v3 (Render) on port {port} | Voice: {TTS_VOICE}")
+    import socketserver; socketserver.TCPServer.allow_reuse_address = True
+    server = HTTPServer(("0.0.0.0", port), WebHandler)
+    server.serve_forever()

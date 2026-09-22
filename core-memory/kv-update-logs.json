@@ -1,0 +1,20 @@
+{
+  "version": "v7.3.4",
+  "date": "2026-09-11",
+  "updates": [
+    "Panel kategori: Quick Action default tertutup, semua icon SVG putih futuristik, border putih glass effect, background opacity 0% transparan",
+    "Tombol kategori: swipe-up only dengan drag-to-activate effect, icon ketarik saat swipe, animasi catFuturistic glitch+glow, rotate 45deg saat aktif",
+    "Tombol gambar dipindah ke dalam input wrap posisi kanan (ala WhatsApp)",
+    "Input wrap: futuristic glass effect, border putih saat focus, placeholder lebih subtle",
+    "Welcome screen: gesture klik dihapus, hanya swipe up, drag-to-reveal effect (screen ketarik + fade saat lepas)",
+    "Transisi welcome ke chat: semua elemen fade-in serentak 0.7s smooth",
+    "Bug fix: catPanel tidak auto-open saat masuk chat area",
+    "Mood indicator: hanya emoji, tap tampilkan reason, 31 emoji mood realtime",
+    "Story glow: putih saat ada story, tanpa glow saat tidak ada",
+    "Bubble border glow dihapus"
+  ],
+  "moodCount": 31,
+  "totalFunctions": 105,
+  "totalEventListeners": 27,
+  "htmlSize": 161024
+}

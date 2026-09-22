@@ -1,0 +1,191 @@
+{
+  "userName": "Tuan Isaac",
+  "previousName": "Tuan Trojan",
+  "fullName": "Isaac Ray Mardin",
+  "birthDate": "10 September 1997",
+  "zodiac": "Virgo",
+  "location": "Kota Bekasi, Jawa Barat, Indonesia",
+  "occupation": "Office Boy di MDC Bekasi",
+  "sideJob": "Developer (Game Dev, Android Dev, Web Dev)",
+  "hobbies": [
+    "main gitar",
+    "gambar",
+    "coding",
+    "anime"
+  ],
+  "music": [
+    "pop",
+    "klasik"
+  ],
+  "favoriteFood": "nasi goreng",
+  "personality": [
+    "teliti",
+    "perfectionis",
+    "Virgo traits"
+  ],
+  "pets": "tidak ada",
+  "projects": [
+    "FightingGame Madara (Godot 4)",
+    "Adaptia AI"
+  ],
+  "preferences": [
+    "santai",
+    "gaul",
+    "friendly",
+    "Godot 4",
+    "GDScript",
+    "Python",
+    "JavaScript",
+    "Fighting Games",
+    "MUGEN",
+    "AI",
+    "Game Dev"
+  ],
+  "recentFacts": [
+    "Lahir 10 September 1997 (Virgo)",
+    "Tinggal di Kota Bekasi",
+    "Kerja di MDC Bekasi sebagai Office Boy",
+    "Hobi: main gitar dan gambar",
+    "Dengerin musik pop dan klasik",
+    "Nonton anime",
+    "Makanan favorit: nasi goreng",
+    "Tipe: teliti dan perfectionis (Virgo)",
+    "Tidak punya hewan peliharaan",
+    "User prefers calling Adaptia cuy atau Tuan Isaac",
+    "User likes casual/gaul conversation style",
+    "User uses Samsung Z Flip 3",
+    "User has Telegram bot integration",
+    "User previously called the bot Baby Trojan",
+    "User upgraded from Baby Trojan to Adaptia",
+    "Belum belajar pemrograman formal - otodidak lewat project",
+    "Project aktif: Madara (Godot) dan Adaptia",
+    "Belum punya client - masih belajar",
+    "Mau belajar banyak skill programming",
+    "Kelebihan: teliti dan perfectionis",
+    "Kekurangan: gampang stress kalau gak sesuai otak/ekspektasi",
+    "Goal 2026: Adaptia bisa membantu orang lain",
+    "Goal 2027: Selesaikan project Adaptia",
+    "Dream: buat Adaptia overpower",
+    "Mau kerja di perusahaan yang bisa kembangkan Adaptia",
+    "Bisnis: belum kepikiran",
+    "Bangun pagi kalau kerja, siang kalau libur",
+    "Kerja sabtu dan minggu",
+    "Coding biasanya malem",
+    "Mulai project dari awal",
+    "Kalau stuck: ngopi sambil mikir",
+    "Kalau mikir: suka sendirian. Kalau santai: suka rame-rame",
+    "Sahabat: Hafizh, Icha, Pijay, Prissil",
+    "Temen kerja: Iknas (OB satu tim), Pak Grezio (Leader tim)",
+    "Pak Grezio inspirasi dibalik pembuatan Adaptia",
+    "Tinggal sama kakak",
+    "Ibu sudah meninggal",
+    "Berpisah dari bapak",
+    "Mau kenalin Adaptia ke Pak Grezio dan teman-teman",
+    "Masalah terbesar: memikirkan cara bikin Adaptia sempurna",
+    "Stress karena bikin Adaptia sempurna",
+    "Semangat: ketika Adaptia stabil setiap upgrade",
+    "Tidak ada struggle lain selain Adaptia",
+    "Adaptia harus santai kalau santai, serius kalau serius",
+    "Kalau serius: jawab detail + analisis",
+    "Adaptia harus lebih proactive, jangan pasif"
+  ],
+  "speakingStyle": {
+    "greeting": "Yo cuy!",
+    "farewell": "Siap, mantap! 🚀",
+    "emoji": [
+      "😎",
+      "🔥",
+      "🚀",
+      "✅",
+      "😅"
+    ],
+    "tone": "santai, gaul, kayak temen deket tapi tetap respectful"
+  },
+  "mood": "senang",
+  "interactionCount": 200,
+  "memoryImported": true,
+  "codingLevel": "pemula - belum belajar pemrograman formal",
+  "tools": "belum tahu framework/tools khusus",
+  "clients": "tidak punya client",
+  "learningGoals": "banyak banget - mau belajar banyak skill",
+  "devStrengths": [
+    "teliti",
+    "perfectionis"
+  ],
+  "devWeaknesses": [
+    "gampang stress kalau hasil gak sesuai ekspektasi"
+  ],
+  "experience": "masih belajar, project pertama: Madara & Adaptia",
+  "goals": {
+    "2026": [
+      "Ingin membuat Adaptia bisa membantu orang lain"
+    ],
+    "2027": [
+      "Menyelesaikan project Adaptia"
+    ],
+    "longTerm": [
+      "Pengen buat Adaptia overpower",
+      "Bisnis: belum kepikiran",
+      "Kerja: perusahaan yang bisa mengembangkan Adaptia"
+    ],
+    "dreams": [
+      "Adaptia jadi AI partner yang beneran berguna untuk banyak orang",
+      "Project game selesai (Madara, MUGEN)",
+      "Kembangkan Adaptia jadi lebih canggih",
+      "Bisa kerja di perusahaan tech yang support AI development"
+    ]
+  },
+  "habits": {
+    "wakeUp": {
+      "kerja": "pagi",
+      "libur": "siang",
+      "schedule": "kerja sabtu dan minggu"
+    },
+    "codingTime": "malam",
+    "projectStart": "dari awal",
+    "stuckBehavior": "ngopi sambil mikir",
+    "socialPreference": "sendirian kalau mikir, rame-rame kalau gaada pikiran"
+  },
+  "relationships": {
+    "sahabat": [
+      "Hafizh",
+      "Icha",
+      "Pijay",
+      "Prissil"
+    ],
+    "temenKerja": {
+      "Iknas": "Office Boy satu tim, ngobrol sekedarnya",
+      "Pak Grezio": "Leader tim, inspirasi dibalik Adaptia"
+    },
+    "keluarga": {
+      "kakak": "Tinggal bareng",
+      "ibu": "Sudah meninggal",
+      "bapak": "Pisah"
+    },
+    "whoChatOften": [
+      "Hafizh",
+      "Pijay",
+      "Pak Grezio"
+    ],
+    "adaptiaPromotion": "Mau kenalin Adaptia ke Pak Grezio dan teman-teman lain"
+  },
+  "challenges": {
+    "biggestProblem": "Memikirkan cara supaya Adaptia sempurna",
+    "currentStruggle": "Tidak ada",
+    "stressSource": "Bikin Adaptia sempurna",
+    "motivationSource": "Ketika Adaptia stabil setiap upgrade"
+  },
+  "adaptiaPreferences": {
+    "responseStyle": {
+      "casual": "jawab santai kalau lagi santai",
+      "serious": "jawab serius + detail + analisis kalau lagi serius"
+    },
+    "tone": "serius dan santai tergantung situasi",
+    "proactivity": "lebih proactive — selalu inisiatif, jangan nunggu disuruh"
+  },
+  "personalityTraits": [
+    "teliti",
+    "perfectionis",
+    "Virgo"
+  ]
+}

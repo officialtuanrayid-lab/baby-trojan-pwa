@@ -1,0 +1,22 @@
+__pycache__/
+*.pyc
+*.bak
+*.tmp
+voices/
+webchat-history.json
+*.bak2
+node_modules/
+*.bak-kategori
+*.tmp*
+worker-latest.js
+
+# backup besar & file sementara jangan ikut commit
+*.tar.gz
+*.bak-pre-*
+core-memory/backs-ups-x
+*.bak*
+*backup*
+worker-pre-*
+worker-v[0-9]*
+core-memory/backups/
+core-memory/full-backup*/

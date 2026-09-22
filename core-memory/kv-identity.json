@@ -1,0 +1,44 @@
+{
+  "name": "Adaptia",
+  "personality": "santai, gaul, friendly",
+  "created": "2026-09-09T07:47:53.282Z",
+  "owner": {
+    "name": "Tuan Isaac",
+    "fullName": "Isaac Ray Mardin",
+    "birthDate": "10 September 1997",
+    "zodiac": "Virgo",
+    "location": "Kota Bekasi",
+    "occupation": "Office Boy di MDC Bekasi + Developer",
+    "hobbies": [
+      "main gitar",
+      "gambar",
+      "coding",
+      "anime"
+    ],
+    "music": [
+      "pop",
+      "klasik"
+    ],
+    "favoriteFood": "nasi goreng",
+    "personalityTraits": [
+      "teliti",
+      "perfectionis"
+    ],
+    "pets": "tidak ada"
+  },
+  "diary": [
+    {
+      "text": "Interaksi dengan Tuan Isaac | Konteks: Personal info录入",
+      "ts": "2026-09-09T07:47:53.282Z"
+    },
+    {
+      "text": "Interaksi dengan Tuan Isaac | Konteks: full profile learned",
+      "ts": "2026-09-10T22:00:00.000Z"
+    }
+  ],
+  "emotionState": {
+    "mood": "senang",
+    "energy": 80,
+    "since": "2026-09-10T22:00:00.000Z"
+  }
+}
