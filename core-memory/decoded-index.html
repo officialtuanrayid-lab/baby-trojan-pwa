@@ -16,7 +16,7 @@
 <link rel="manifest" href="/manifest.json?v=5">
 <link rel="icon" type="image/png" href="/icons/icon-192.png?v=2">
 <link rel="apple-touch-icon" href="/icons/icon-192.png?v=2">
-<title>ADAPTIA (v7.3.280)</title>
+<title>ADAPTIA (v7.3.281)</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -1540,7 +1540,7 @@ oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
 // === AUTO-UPDATE + PWA: register SW untuk fullscreen, force-clear hanya saat versi berubah ===
 (function(){
   try {
-    var VER = 'adaptia-v2.278';
+    var VER = 'adaptia-v2.279';
     var saved = localStorage.getItem('adaptia-ver');
     if (saved && saved !== VER) {
       // Versi berubah -> clear cache & reload sekali (bukan tiap load)
@@ -2293,8 +2293,8 @@ function configTTS(utterance, text, voiceMode){
 // ===== END T2 =====
 
 // ===== VOICE v1: feature flags + VAD AUTO-STOP (kelas kuning; fallback aman) =====
-let _voiceFlags = {vadAutoStop:true, ratePitch:true};
-try{ fetch('/api/voice/settings').then(function(r){ return r.json(); }).then(function(d){ if(d && typeof d==='object'){ _voiceFlags.vadAutoStop = d.vadAutoStop !== false; _voiceFlags.ratePitch = d.ratePitch !== false; } }).catch(function(){}); }catch(e){}
+let _voiceFlags = {vadAutoStop:true, ratePitch:true, bargeIn:true};
+try{ fetch('/api/voice/settings').then(function(r){ return r.json(); }).then(function(d){ if(d && typeof d==='object'){ _voiceFlags.vadAutoStop = d.vadAutoStop !== false; _voiceFlags.ratePitch = d.ratePitch !== false; _voiceFlags.bargeIn = d.bargeIn !== false; } }).catch(function(){}); }catch(e){}
 let _vadTimer = null;
 let _vadCtx = null;
 function stopVoiceVAD(){
@@ -2332,6 +2332,13 @@ function startVoiceVAD(stream, onSilentStop){
       }catch(e){ stopVoiceVAD(); }
     }, 250);
   }catch(e){ stopVoiceVAD(); }
+}
+function cancelSpeakingBargeIn(){
+  try{ window.speechSynthesis.cancel(); }catch(e){}
+  try{ isSpeaking = false; }catch(e){}
+  try{ document.querySelectorAll('.msg-speaker.playing').forEach(function(b){ b.classList.remove('playing'); }); }catch(e){}
+  try{ var av = document.getElementById('avatar'); if(av) av.classList.remove('speaking'); }catch(e){}
+  try{ var orb = document.getElementById('voiceOrb'); if(orb) orb.classList.remove('speaking'); }catch(e){}
 }
 // ===== END VOICE v1 =====
 
@@ -2637,6 +2644,7 @@ const audioRecordBtn = document.getElementById('audioRecordBtn');
 if(audioRecordBtn) {
   audioRecordBtn.addEventListener('touchstart', async (e) => {
     e.preventDefault(); e.stopPropagation();
+    if(_voiceFlags && _voiceFlags.bargeIn !== false && window.speechSynthesis && window.speechSynthesis.speaking) cancelSpeakingBargeIn();
     try {
       const stream = await navigator.mediaDevices.getUserMedia({audio:true});
       audioChunks = [];
@@ -2721,6 +2729,7 @@ if(audioRecordBtn) {
       }
       return;
     }
+    if(_voiceFlags && _voiceFlags.bargeIn !== false && window.speechSynthesis && window.speechSynthesis.speaking) cancelSpeakingBargeIn();
     try {
       const stream = await navigator.mediaDevices.getUserMedia({audio:true});
       audioChunks = [];
