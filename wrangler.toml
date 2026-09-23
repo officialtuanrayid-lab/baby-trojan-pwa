@@ -7,5 +7,10 @@ kv_namespaces = [
   { binding = "MEMORY_KV", id = "20eefddba7ec402792a007453fd153a5" }
 ]
 
+[vars]
+API_PROXY = "https://adaptia.isaacdev.workers.dev"
+VAPID_PUBLIC_KEY = "BCVZoS3EyF-NCRkxU6zH10nBrc5-2CAVTa-5okF3bo3mRh7Q2ajXV3K4jbL6QRMQa12GJCFMAIsWdfujR8A8P7E"
+GEMINI_MODEL = "gemini-flash-lite-latest"
+
 [triggers]
 crons = ["* * * * *"]

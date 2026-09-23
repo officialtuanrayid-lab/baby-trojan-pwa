@@ -100,6 +100,28 @@ function main() {
     process.exit(1);
   }
 
+  // 5b. VALIDASI INLINE JS HTML — cegah deploy app mati (SyntaxError / bare async-await nyasar)
+  const scriptRe = /<script[^>]*>([\s\S]*?)<\/script>/gi;
+  const scripts = [];
+  let sm;
+  while ((sm = scriptRe.exec(html)) !== null) scripts.push(sm[1]);
+  const problems = [];
+  scripts.forEach((sc, idx) => {
+    try {
+      new Function(sc);
+    } catch (e) {
+      problems.push('[inline script #' + idx + '] SYNTAX ERROR: ' + (e && e.message || e));
+    }
+    if (/^\s*async\s*$/m.test(sc)) problems.push('[inline script #' + idx + '] ada token "async" nyasar (baris sendiri) — hapus!');
+    if (/^\s*await\s*$/m.test(sc)) problems.push('[inline script #' + idx + '] ada token "await" nyasar (baris sendiri) — hapus!');
+    if (sc.includes('\u0000')) problems.push('[inline script #' + idx + '] ada karakter NUL di script');
+  });
+  if (problems.length) {
+    console.error('=== VALIDASI GAGAL — build DIBATALKAN ===');
+    problems.forEach((p) => console.error('  - ' + p));
+    process.exit(1);
+  }
+
   fs.writeFileSync(outPath, template);
 
   console.log('=== BUILD WORKER SELESAI ===');
