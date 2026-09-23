@@ -14,8 +14,9 @@
 <meta name="theme-color" content="#0a0a0f" media="(prefers-color-scheme: dark)">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="/manifest.json?v=5">
+<link rel="icon" type="image/png" href="/icons/icon-192.png?v=2">
 <link rel="apple-touch-icon" href="/icons/icon-192.png?v=2">
-<title>ADAPTIA (v7.3.278)</title>
+<title>ADAPTIA (v7.3.280)</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -1539,7 +1540,7 @@ oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
 // === AUTO-UPDATE + PWA: register SW untuk fullscreen, force-clear hanya saat versi berubah ===
 (function(){
   try {
-    var VER = 'adaptia-v2.276';
+    var VER = 'adaptia-v2.278';
     var saved = localStorage.getItem('adaptia-ver');
     if (saved && saved !== VER) {
       // Versi berubah -> clear cache & reload sekali (bukan tiap load)
@@ -2285,11 +2286,54 @@ function configTTS(utterance, text, voiceMode){
   utterance.lang = 'id-ID';
   const v = getIDVoice();
   if(v) utterance.voice = v;
-  const cfg = getTTSConfig(_lastMood);
+  const cfg = (_voiceFlags && _voiceFlags.ratePitch === false) ? {rate:1.0, pitch:1.1} : getTTSConfig(_lastMood);
   utterance.rate = voiceMode ? cfg.rate : Math.min(cfg.rate * 1.02, 1.12);
   utterance.pitch = cfg.pitch;
 }
 // ===== END T2 =====
+
+// ===== VOICE v1: feature flags + VAD AUTO-STOP (kelas kuning; fallback aman) =====
+let _voiceFlags = {vadAutoStop:true, ratePitch:true};
+try{ fetch('/api/voice/settings').then(function(r){ return r.json(); }).then(function(d){ if(d && typeof d==='object'){ _voiceFlags.vadAutoStop = d.vadAutoStop !== false; _voiceFlags.ratePitch = d.ratePitch !== false; } }).catch(function(){}); }catch(e){}
+let _vadTimer = null;
+let _vadCtx = null;
+function stopVoiceVAD(){
+  try{ if(_vadTimer){ clearInterval(_vadTimer); _vadTimer = null; } }catch(e){ _vadTimer = null; }
+  try{ if(_vadCtx && _vadCtx.state !== 'closed') _vadCtx.close(); }catch(e){}
+  _vadCtx = null;
+}
+function startVoiceVAD(stream, onSilentStop){
+  try{
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC || typeof onSilentStop !== 'function' || !stream) return;
+    stopVoiceVAD();
+    const ctx = new AC();
+    _vadCtx = ctx;
+    if(ctx.state === 'suspended'){ try{ ctx.resume(); }catch(e){} }
+    const src = ctx.createMediaStreamSource(stream);
+    const an = ctx.createAnalyser();
+    an.fftSize = 1024;
+    src.connect(an);
+    const buf = new Float32Array(an.fftSize);
+    const startedAt = Date.now();
+    let lastLoudAt = startedAt;
+    _vadTimer = setInterval(function(){
+      try{
+        an.getFloatTimeDomainData(buf);
+        let sum = 0;
+        for(let i=0;i<buf.length;i++) sum += buf[i]*buf[i];
+        const rms = Math.sqrt(sum/buf.length);
+        if(rms > 0.02) lastLoudAt = Date.now();
+        const nowAt = Date.now();
+        if((nowAt - startedAt) >= 600 && (nowAt - lastLoudAt) >= 1500){
+          stopVoiceVAD();
+          try{ onSilentStop(); }catch(e){}
+        }
+      }catch(e){ stopVoiceVAD(); }
+    }, 250);
+  }catch(e){ stopVoiceVAD(); }
+}
+// ===== END VOICE v1 =====
 
 function speakBotMsg(el) {
   const row = el.closest('.msg-row');
@@ -2599,6 +2643,7 @@ if(audioRecordBtn) {
       mediaRecorder = new MediaRecorder(stream, {mimeType:'audio/webm;codecs=opus'});
       mediaRecorder.ondataavailable = (e) => { if(e.data.size > 0) audioChunks.push(e.data); };
       mediaRecorder.onstop = async () => {
+        stopVoiceVAD();
         stream.getTracks().forEach(t => t.stop());
         if(audioChunks.length === 0) return;
         const blob = new Blob(audioChunks, {type:'audio/webm'});
@@ -2637,6 +2682,16 @@ if(audioRecordBtn) {
       const sub = document.getElementById('voiceSub');
       vt.textContent = '🔴 Merekam... tahan terus!';
       sub.textContent = 'Lepas untuk kirim';
+      if(_voiceFlags && _voiceFlags.vadAutoStop !== false && isAudioRecording && mediaRecorder && mediaRecorder.state === 'recording'){
+        startVoiceVAD(stream, function(){
+          try{
+            if(isAudioRecording && mediaRecorder && mediaRecorder.state === 'recording'){
+              const subV = document.getElementById('voiceSub'); if(subV) subV.textContent = '✓ Diam otomatis, mengirim...';
+              mediaRecorder.stop(); isAudioRecording = false; audioRecordBtn.classList.remove('recording');
+            }
+          }catch(e){}
+        });
+      }
       // Auto stop after 30 seconds
       setTimeout(() => {
         if(isAudioRecording && mediaRecorder && mediaRecorder.state === 'recording') {
@@ -2672,6 +2727,7 @@ if(audioRecordBtn) {
       mediaRecorder = new MediaRecorder(stream, {mimeType:'audio/webm;codecs=opus'});
       mediaRecorder.ondataavailable = (e) => { if(e.data.size > 0) audioChunks.push(e.data); };
       mediaRecorder.onstop = async () => {
+        stopVoiceVAD();
         stream.getTracks().forEach(t => t.stop());
         if(audioChunks.length === 0) return;
         const blob = new Blob(audioChunks, {type:'audio/webm'});
@@ -2710,6 +2766,16 @@ if(audioRecordBtn) {
       const sub = document.getElementById('voiceSub');
       vt.textContent = '🔴 Klik lagi untuk berhenti';
       sub.textContent = 'Klik 🎤 untuk kirim';
+      if(_voiceFlags && _voiceFlags.vadAutoStop !== false && isAudioRecording && mediaRecorder && mediaRecorder.state === 'recording'){
+        startVoiceVAD(stream, function(){
+          try{
+            if(isAudioRecording && mediaRecorder && mediaRecorder.state === 'recording'){
+              const subV = document.getElementById('voiceSub'); if(subV) subV.textContent = '✓ Diam otomatis, mengirim...';
+              mediaRecorder.stop(); isAudioRecording = false; audioRecordBtn.classList.remove('recording');
+            }
+          }catch(e){}
+        });
+      }
       setTimeout(() => {
         if(isAudioRecording && mediaRecorder && mediaRecorder.state === 'recording') {
           mediaRecorder.stop(); isAudioRecording = false;
@@ -4964,7 +5030,7 @@ function handleImageUpload(){
           }
           if(voiceModeActive && 'speechSynthesis' in window){
             const u = new SpeechSynthesisUtterance(data.reply.replace(/[#*`]/g,''));
-            u.lang='id-ID'; u.rate=1.0; u.pitch=1.1;
+            configTTS(u, data.reply, !!voiceModeActive);
             window.speechSynthesis.speak(u);
           }
         }
