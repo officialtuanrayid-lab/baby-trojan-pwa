@@ -15,7 +15,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="/manifest.json?v=5">
 <link rel="apple-touch-icon" href="/icons/icon-192.png?v=2">
-<title>ADAPTIA (v7.3.276)</title>
+<title>ADAPTIA (v7.3.277)</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -1539,7 +1539,7 @@ oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
 // === AUTO-UPDATE + PWA: register SW untuk fullscreen, force-clear hanya saat versi berubah ===
 (function(){
   try {
-    var VER = 'adaptia-v2.274';
+    var VER = 'adaptia-v2.275';
     var saved = localStorage.getItem('adaptia-ver');
     if (saved && saved !== VER) {
       // Versi berubah -> clear cache & reload sekali (bukan tiap load)
