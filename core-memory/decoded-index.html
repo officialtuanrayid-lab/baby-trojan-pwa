@@ -15,7 +15,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="/manifest.json?v=5">
 <link rel="apple-touch-icon" href="/icons/icon-192.png?v=2">
-<title>ADAPTIA (v7.3.277)</title>
+<title>ADAPTIA (v7.3.278)</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -1373,7 +1373,7 @@ body.loaded .header, body.loaded .chat, body.loaded .input-area { }
 <div class="welcome" id="welcome">
 <div class="welcome-icon" id="welcomeIcon">🤖</div>
 <h2 id="welcomeName">Adaptia</h2>
-<p>Assisten Pribadi Tuan Isaac<br>Ketik apa aja atau pakai voice 💬</p>
+<p><span id="welcomeGreet">Assisten Pribadi Tuan Isaac</span><br>Ketik apa aja atau pakai voice 💬</p>
 <div class="quick-actions" style="display:none">
 <div class="quick-btn" onclick="quickSend('cari game fighting terbaik 2025')">🎮 Game</div>
 <div class="quick-btn" onclick="quickSend('reminder jam 3 jalan-jalan')">⏰ Reminder</div>
@@ -1539,7 +1539,7 @@ oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
 // === AUTO-UPDATE + PWA: register SW untuk fullscreen, force-clear hanya saat versi berubah ===
 (function(){
   try {
-    var VER = 'adaptia-v2.275';
+    var VER = 'adaptia-v2.276';
     var saved = localStorage.getItem('adaptia-ver');
     if (saved && saved !== VER) {
       // Versi berubah -> clear cache & reload sekali (bukan tiap load)
@@ -1939,7 +1939,7 @@ async function handleImageUpload() {
         typing.classList.remove('active');
         if (data.mood) applyMoodState(data.mood);
         if (data.reply) {
-          addMsg(data.reply, 'bot');
+          addMsg(data.reply, 'bot'); if(data.suggestions&&data.suggestions.length) showSuggestions(data.suggestions);
           chatHistory.push({role:'assistant', text:data.reply});
           learnFromMessage(data.reply, 'assistant');
           if (data.audio) playTTS(data.audio);
@@ -2006,6 +2006,7 @@ function applySettings() {
   document.documentElement.style.setProperty('--bot-msg', settings.botMsg);
   document.getElementById('headerName').textContent = settings.botName || 'Adaptia';
   document.getElementById('welcomeName').textContent = settings.botName || 'Adaptia';
+  (function(){ try{ var h=(new Date().getHours()+7)%24; var g = h<11?'Selamat pagi, Tuan ☀️':h<15?'Selamat siang, Tuan 👋':h<18?'Selamat sore, Tuan 🌤️':'Selamat malam, Tuan 🌙'; var wg=document.getElementById('welcomeGreet'); if(wg) wg.textContent=g; }catch(e){} })();
   document.querySelector('.avatar').textContent = settings.avatarEmoji || '\ud83e\udd16';
   const welcomeIcon = document.getElementById('welcomeIcon');
   if (settings.avatarImage) {
@@ -2091,7 +2092,7 @@ async function sendMsg(voice=false) {
     typing.classList.remove('active');
     if (data.mood) applyMoodState(data.mood);
     if (data.reply) {
-      addMsg(data.reply, 'bot');
+      addMsg(data.reply, 'bot'); if(data.suggestions&&data.suggestions.length) showSuggestions(data.suggestions);
       chatHistory.push({role:'assistant', text:data.reply});
       learnFromMessage(data.reply, 'assistant');
       if (data.audio) playTTS(data.audio);
@@ -2198,6 +2199,7 @@ function detectSkillCommand(text) {
 }
 
 function quickSend(text) { msgInput.value = text; sendBtn.disabled = false; sendMsg(); }
+function showSuggestions(list){ try{ if(!Array.isArray(list)||!list.length) return; var box=document.getElementById('chat'); if(!box) return; var old=document.getElementById('sugRow'); if(old) old.remove(); var row=document.createElement('div'); row.id='sugRow'; row.className='msg-sugs'; row.style.cssText='display:flex;flex-wrap:wrap;gap:8px;padding:4px 14px 8px 52px;'; list.slice(0,3).forEach(function(sug){ var b=document.createElement('button'); b.className='quick-btn'; b.style.cssText='padding:7px 12px;border:1px solid rgba(255,255,255,.16);border-radius:16px;background:rgba(255,255,255,.07);color:var(--text);font-size:12px;cursor:pointer;'; b.textContent=sug; b.onclick=function(){ if(window.msgInput){ msgInput.value=sug; msgInput.focus(); } if(window.sendBtn) sendBtn.disabled=false; if(typeof sendMsg==='function') sendMsg(); }; row.appendChild(b); }); box.appendChild(row); box.scrollTop=box.scrollHeight; }catch(e){} }
 
 function formatText(text) {
   return text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>').replace(/`(.*?)`/g,'<code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px">$1</code>').replace(/\n/g,'<br>');
@@ -2553,7 +2555,7 @@ async function sendVoiceMessage(text) {
     if (data.mood) applyMoodState(data.mood);
     vt.textContent = data.reply || '...';
     addMsg(text, 'user');
-    addMsg(data.reply, 'bot');
+    addMsg(data.reply, 'bot'); if(data.suggestions&&data.suggestions.length) showSuggestions(data.suggestions);
     chatHistory.push({role:'assistant', text:data.reply});
     learnFromMessage(data.reply, 'assistant');
     if (data.audio) playTTS(data.audio);
