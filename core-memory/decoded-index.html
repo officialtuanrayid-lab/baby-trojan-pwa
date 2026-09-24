@@ -2308,6 +2308,10 @@ function configTTS(utterance, text, voiceMode, ctx){
   const cfg = (_voiceFlags && _voiceFlags.ratePitch === false) ? {rate:1.0, pitch:1.1} : getTTSConfig(_lastMood, ctx);
   utterance.rate = voiceMode ? cfg.rate : Math.min(cfg.rate * 1.02, 1.12);
   utterance.pitch = cfg.pitch;
+  if(_voiceFlags && _voiceFlags.childMode){
+    utterance.rate = Math.min(1.5, (parseFloat(utterance.rate) || 1) * 1.06);
+    utterance.pitch = Math.min(2, (parseFloat(utterance.pitch) || 1) * 1.25);
+  }
 }
 // ===== END T2 =====
 
@@ -2420,11 +2424,16 @@ async function speakNeural(text, isVoiceMode, onDone, ctx){
   };
   try{
     const cfg = (_voiceFlags && _voiceFlags.ratePitch === false) ? {rate:1.0, pitch:1.1} : getTTSConfig(_lastMood, ctx);
-    const pitch = Math.max(0.95, Math.min(1.10, parseFloat(cfg.pitch) || 1.0));
+    let pitch = Math.max(0.95, Math.min(1.10, parseFloat(cfg.pitch) || 1.0));
+    let rate = parseFloat(cfg.rate) || 1.0;
+    if(_voiceFlags && _voiceFlags.childMode){
+      pitch = Math.max(1.15, Math.min(1.38, pitch + 0.22));
+      rate = Math.min(1.22, rate + 0.06);
+    }
     const voice = (_voiceFlags && _voiceFlags.voiceName) ? _voiceFlags.voiceName : '';
     const cleaned = cleanForTTS(text);
     const chunks = cleaned.length > 600 ? splitTTS(cleaned, 600) : [cleaned];
-    await playTTSChunks(chunks, 0, cfg.rate, pitch, voice, finished, failAll);
+    await playTTSChunks(chunks, 0, rate, pitch, voice, finished, failAll);
   }catch(e){
     failAll();
   }
@@ -2489,8 +2498,13 @@ function warmTTSWake(){
 let _voiceFlags = {vadAutoStop:true, ratePitch:true, bargeIn:true, voiceName:'', userRate:1.0, wakeWords:[]};
 try{ _voiceFlags.userRate = parseFloat(localStorage.getItem('adaptia_voice_rate')) || 1.0; }catch(e){}
 try{ _voiceFlags.voiceName = localStorage.getItem('adaptia_tts_neural') || ''; }catch(e){}
+try{ _voiceFlags.childMode = localStorage.getItem('adaptia_tts_child') === '1'; }catch(e){}
 function saveVoicePref(body){
   try{ fetch('/api/voice/settings', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body || {})}).catch(function(){}); }catch(e){}
+}
+function setChildVoice(on){
+  _voiceFlags.childMode = !!on;
+  try{ localStorage.setItem('adaptia_tts_child', on ? '1' : '0'); }catch(e){}
 }
 function adjustVoiceRate(d){
   try{
@@ -3087,6 +3101,16 @@ function handleVoiceCommand(raw){
   if(is('suara cowok','ganti suara cowok','pake suara cowok','pakai suara cowok','suara laki','ganti suara laki','suara pria')){
     setNeuralVoice('id-ID-ArdiNeural');
     speakBotText('Oke, balik lagi ke suara cowok.', true, null, 'reply');
+    return true;
+  }
+  if(is('suara anak','suara kecil','pake suara anak','pakai suara anak','suara anak anak','jadi anak kecil','suara anak-anak','jadi suara anak')){
+    setChildVoice(true);
+    speakBotText('Oke, sekarang suaranya jadi kayak anak kecil. Imut kan?', true, null, 'reply');
+    return true;
+  }
+  if(is('suara normal','balikin suara normal','ganti suara normal','suara dewasa','jadi dewasa','balikin normal')){
+    setChildVoice(false);
+    speakBotText('Oke, balik lagi ke suara normal.', true, null, 'reply');
     return true;
   }
   return false;

@@ -313,6 +313,13 @@ align-items:center;justify-content:center;z-index:2;cursor:pointer}
 <input type="number" id="voiceRate" min="0.7" max="1.4" step="0.05" value="1.0">
 </div>
 <div class="field">
+<label>Mode Suara Anak (pitch tinggi & imut)</label>
+<select id="childMode">
+<option value="0">Normal</option>
+<option value="1">👶 Anak</option>
+</select>
+</div>
+<div class="field">
 <label>Kata Panggil Custom (pisah koma, huruf kecil)</label>
 <input type="text" id="wakeWords" placeholder="mis: halo adaptia, bang, ai" maxlength="120">
 </div>
@@ -588,6 +595,7 @@ async function loadVoicePrefs(){
       const ww = (d && Array.isArray(d.wakeWords)) ? d.wakeWords : [];
       document.getElementById('wakeWords').value = ww.join(', ');
     }catch(e){}
+    try{ document.getElementById('childMode').value = localStorage.getItem('adaptia_tts_child') === '1' ? '1' : '0'; }catch(e){}
   }catch(e){}
 }
 async function saveVoicePrefs(){
@@ -598,6 +606,7 @@ async function saveVoicePrefs(){
       rate: parseFloat(document.getElementById('voiceRate').value) || 1.0,
       wakeWords: String(document.getElementById('wakeWords').value || '').split(',').map(function(w){ return w.trim(); }).filter(Boolean)
     };
+    try{ localStorage.setItem('adaptia_tts_child', document.getElementById('childMode').value === '1' ? '1' : '0'); }catch(e){}
     const r = await fetch('/api/voice/settings', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
     const d = await r.json();
     if(msg){
