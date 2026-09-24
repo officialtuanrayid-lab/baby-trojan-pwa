@@ -16,7 +16,7 @@
 <link rel="manifest" href="/manifest.json?v=5">
 <link rel="icon" type="image/png" href="/icons/icon-192.png?v=2">
 <link rel="apple-touch-icon" href="/icons/icon-192.png?v=2">
-<title>ADAPTIA (v7.3.291)</title>
+<title>ADAPTIA (v7.3.293)</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -1540,7 +1540,7 @@ oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
 // === AUTO-UPDATE + PWA: register SW untuk fullscreen, force-clear hanya saat versi berubah ===
 (function(){
   try {
-    var VER = 'adaptia-v2.289';
+    var VER = 'adaptia-v2.291';
     var saved = localStorage.getItem('adaptia-ver');
     if (saved && saved !== VER) {
       // Versi berubah -> clear cache & reload sekali (bukan tiap load)
@@ -2299,9 +2299,91 @@ function configTTS(utterance, text, voiceMode){
 }
 // ===== END T2 =====
 
+// ===== NEURAL TTS (edge-tts via /api/tts; fallback ke TTS sistem) =====
+let ttsBusy = false;
+function cleanForTTS(t){
+  try{
+    t = String(t || '');
+    t = t.replace(/https?:\/\/\S+/g, ' ').replace(/[#*`_~\[\]{}|]/g, ' ');
+    t = t.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{2190}-\u{21FF}\u{FE0F}\u{1F900}-\u{1F9FF}\u{1FA70}-\u{1FAFF}]/gu, '');
+    t = t.replace(/\b(gw|guw|gua)\b/gi, 'gue').replace(/\b(elu|eloe)\b/gi, 'elo').replace(/\blu\b/gi, 'lo');
+    t = t.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+    t = t.replace(/\s+/g, ' ').trim();
+    return t;
+  }catch(e){ return String(t || ''); }
+}
+function speakWithSynth(text, isVoiceMode){
+  try{
+    if(!text || !('speechSynthesis' in window)) return false;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(cleanForTTS(text));
+    configTTS(u, text, isVoiceMode === true);
+    isSpeaking = true;
+    document.getElementById('avatar')?.classList.add('speaking');
+    document.getElementById('voiceOrb')?.classList.add('speaking');
+    const clearSpeak = function(){
+      isSpeaking = false;
+      setTimeout(function(){
+        document.getElementById('avatar')?.classList.remove('speaking');
+        document.getElementById('voiceOrb')?.classList.remove('speaking');
+      }, 750);
+      try{ if(voiceModeActive && autoMicEnabled) voiceReListen(); }catch(e){}
+    };
+    u.onend = clearSpeak;
+    u.onerror = clearSpeak;
+    window.speechSynthesis.speak(u);
+    try{ window.speechSynthesis.resume(); }catch(e){}
+    return true;
+  }catch(e){ isSpeaking = false; return false; }
+}
+function speakBotText(text, isVoiceMode){
+  if(!text || isSpeaking || ttsBusy) return;
+  if(_voiceFlags && _voiceFlags.neuralTTS){
+    speakNeural(text, isVoiceMode);
+    return;
+  }
+  speakWithSynth(text, isVoiceMode);
+}
+async function speakNeural(text, isVoiceMode){
+  if(!text || ttsBusy) return;
+  ttsBusy = true;
+  isSpeaking = true;
+  document.getElementById('avatar')?.classList.add('speaking');
+  document.getElementById('voiceOrb')?.classList.add('speaking');
+  const clearNeural = function(){
+    ttsBusy = false;
+    isSpeaking = false;
+    setTimeout(function(){
+      document.getElementById('avatar')?.classList.remove('speaking');
+      document.getElementById('voiceOrb')?.classList.remove('speaking');
+    }, 750);
+    try{ if(voiceModeActive && autoMicEnabled) voiceReListen(); }catch(e){}
+  };
+  try{
+    const cfg = (_voiceFlags && _voiceFlags.ratePitch === false) ? {rate:1.0, pitch:1.1} : getTTSConfig(_lastMood);
+    const res = await fetch('/api/tts', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text: text, rate: cfg.rate, pitch: cfg.pitch})});
+    const ct = res.headers.get('content-type') || '';
+    if(!res.ok || ct.indexOf('audio') < 0) throw new Error('tts http ' + res.status);
+    const blob = await res.blob();
+    if(blob.size < 100) throw new Error('tts empty');
+    const url = URL.createObjectURL(blob);
+    ttsAudio.pause();
+    ttsAudio.src = url;
+    ttsAudio.onended = clearNeural;
+    ttsAudio.onerror = clearNeural;
+    await ttsAudio.play().catch(function(){ clearNeural(); });
+  }catch(e){
+    ttsBusy = false;
+    isSpeaking = false;
+    document.getElementById('avatar')?.classList.remove('speaking');
+    document.getElementById('voiceOrb')?.classList.remove('speaking');
+    const ok = speakWithSynth(text, isVoiceMode);
+    if(!ok){ try{ if(voiceModeActive && autoMicEnabled) voiceReListen(); }catch(e2){} }
+  }
+}
 // ===== VOICE v1: feature flags + VAD AUTO-STOP (kelas kuning; fallback aman) =====
 let _voiceFlags = {vadAutoStop:true, ratePitch:true, bargeIn:true};
-try{ fetch('/api/voice/settings').then(function(r){ return r.json(); }).then(function(d){ if(d && typeof d==='object'){ _voiceFlags.vadAutoStop = d.vadAutoStop !== false; _voiceFlags.ratePitch = d.ratePitch !== false; _voiceFlags.bargeIn = d.bargeIn !== false; } }).catch(function(){}); }catch(e){}
+try{ fetch('/api/voice/settings').then(function(r){ return r.json(); }).then(function(d){ if(d && typeof d==='object'){ _voiceFlags.vadAutoStop = d.vadAutoStop !== false; _voiceFlags.ratePitch = d.ratePitch !== false; _voiceFlags.bargeIn = d.bargeIn !== false; _voiceFlags.neuralTTS = d.neuralTTS === true; } }).catch(function(){}); }catch(e){}
 let _vadTimer = null;
 let _vadCtx = null;
 function stopVoiceVAD(){
@@ -2365,7 +2447,7 @@ function speakBotMsg(el) {
   }
   document.querySelectorAll('.msg-speaker.playing').forEach(b => b.classList.remove('playing'));
   window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
+  const u = new SpeechSynthesisUtterance(cleanForTTS(text));
   configTTS(u, text, false);
   el.classList.add('playing');
   document.getElementById('avatar')?.classList.add('speaking');
@@ -2398,28 +2480,9 @@ function addMsg(text, sender) {
     typewriterEffect(contentEl, formatText(text), function() {
       contentEl.innerHTML += time;
     });
-  // Auto TTS — aktif di voice mode ATAU autoVoice ON (default ON, bisa dimatiin)
-  if ((voiceModeActive || autoVoice) && text && !isSpeaking && ('speechSynthesis' in window)) {
-    try {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text.replace(/[#*`]/g,''));
-      configTTS(u, text, voiceModeActive);
-      isSpeaking = true;
-      document.getElementById('avatar')?.classList.add('speaking');
-      document.getElementById('voiceOrb')?.classList.add('speaking');
-      const clearSpeak = function(){
-        isSpeaking = false;
-        setTimeout(function(){
-          document.getElementById('avatar')?.classList.remove('speaking');
-          document.getElementById('voiceOrb')?.classList.remove('speaking');
-        }, 750);
-        try{ if(voiceModeActive && autoMicEnabled) voiceReListen(); }catch(e){}
-      };
-      u.onend = clearSpeak;
-      u.onerror = clearSpeak;
-      window.speechSynthesis.speak(u);
-      try{ window.speechSynthesis.resume(); }catch(e){}
-    } catch(e) {}
+  // Auto TTS — neural (edge-tts) kalau aktif, fallback speechSynthesis
+  if ((voiceModeActive || autoVoice) && text && !isSpeaking) {
+    try { speakBotText(text, voiceModeActive); } catch(e) {}
   }
   } else {
     const msg = document.createElement('div');
@@ -2431,6 +2494,11 @@ function addMsg(text, sender) {
 }
 
 function playTTS(url, fallbackText) {
+  // Neural TTS (edge-tts) dulu kalau aktif — fallback ke speechSynthesis di dalam
+  if (fallbackText && _voiceFlags && _voiceFlags.neuralTTS) {
+    speakNeural(fallbackText, false);
+    return;
+  }
   // Try Web Speech API first (no server needed, works on Samsung)
   try {
     if (fallbackText && 'speechSynthesis' in window) {
