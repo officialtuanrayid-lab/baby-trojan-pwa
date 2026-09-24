@@ -16,7 +16,7 @@
 <link rel="manifest" href="/manifest.json?v=5">
 <link rel="icon" type="image/png" href="/icons/icon-192.png?v=2">
 <link rel="apple-touch-icon" href="/icons/icon-192.png?v=2">
-<title>ADAPTIA (v7.3.289)</title>
+<title>ADAPTIA (v7.3.290)</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -1540,7 +1540,7 @@ oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
 // === AUTO-UPDATE + PWA: register SW untuk fullscreen, force-clear hanya saat versi berubah ===
 (function(){
   try {
-    var VER = 'adaptia-v2.287';
+    var VER = 'adaptia-v2.288';
     var saved = localStorage.getItem('adaptia-ver');
     if (saved && saved !== VER) {
       // Versi berubah -> clear cache & reload sekali (bukan tiap load)
@@ -2570,23 +2570,42 @@ function showWakeToast(txt){
     t._h = setTimeout(function(){ try{ t.style.opacity = '0'; }catch(e){} }, 6000);
   }catch(e){}
 }
+function editDist(a,b){
+  const m=a.length, n=b.length;
+  if(Math.abs(m-n) > 3) return 9;
+  const dp=[];
+  for(let i=0;i<=m;i++){ dp[i]=[i]; for(let j=1;j<=n;j++) dp[i][j]=0; }
+  for(let j=0;j<=n;j++) dp[0][j]=j;
+  for(let i=1;i<=m;i++){
+    for(let j=1;j<=n;j++){
+      dp[i][j]=Math.min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
+    }
+  }
+  return dp[m][n];
+}
 function localWakeHit(buf){
   try{
     if(!buf) return false;
     const t = ' ' + String(buf).toLowerCase().replace(/[^a-z0-9\s]/g,' ') + ' ';
     const toks = t.split(/\s+/).filter(function(x){ return x.length > 0; });
     // (1) kata inti + varian salah dengar umum -> trigger di posisi mana pun
-    const exact = ['adaptia','adeptia','adepcia','adepxia','adapcia','adepsta','adaptea','adepdia','adapsia','adapsi','adepsia','adepsi','adaptiya','adaptiaa','adabtia','adapzia','aditya','apasia','aptia','daptia','depcia'];
+    const exact = ['adaptia','adeptia','adepcia','adepxia','adapcia','adepsta','adaptea','adepdia','adapsia','adapsi','adepsia','adepsi','adaptiya','adaptiaa','adabtia','adapzia','aditya','apasia','aptia','daptia','depcia','adifia','adivia','adevia','adepia','adapia','adifiaa','departia','adaptia'];
+    // kata umum yang MIRIP tapi bukan panggilan -> jangan trigger
+    const black = ['adapun','adalah','adanya','apakah','apalagi','dapat','dapet','depan','di atas','ada yang'];
     // (2) kata panggil singkat -> trigger kalau ucapan pendek (<=6 kata)
     const panggil = ['bang','kak','tuan','oi','oy'];
     const adaptLike = function(w){
-      return (w.indexOf('adap')===0||w.indexOf('adapt')===0||w.indexOf('adept')===0||w.indexOf('adepc')===0||w.indexOf('adeps')===0||w.indexOf('adabt')===0) && w.length>=4 && w.length<=12 && w!=='adapun';
+      return (w.indexOf('adap')===0||w.indexOf('adapt')===0||w.indexOf('adept')===0||w.indexOf('adepc')===0||w.indexOf('adeps')===0||w.indexOf('adabt')===0) && w.length>=4 && w.length<=12;
     };
+    // (3) detect kata "adaptia" yang ke-pecah spasi DI UCAPAN PENDEK: "ada pia" -> "adapia", "a departia" -> "adepartia"
+    const joined = String(buf).toLowerCase().replace(/[^a-z]/g,'');
+    if(joined.length <= 10 && joined.indexOf('adapun')===-1 && joined.indexOf('adapalagi')===-1 && /^(adap|adapt|adep|adept|adab)/.test(joined)) return true;
     const n = toks.length;
     for(let i=0;i<n;i++){
       const w = toks[i];
       if(exact.indexOf(w) !== -1) return true;
-      if(adaptLike(w)) return true;
+      if(adaptLike(w) && black.indexOf(w)===-1) return true;
+      if((w[0]==='a'||w[0]==='d') && w.length>=5 && w.length<=10 && black.indexOf(w)===-1 && editDist(w,'adaptia') <= 2) return true;
       if(panggil.indexOf(w) !== -1 && n <= 6) return true;
     }
   }catch(e){}
@@ -2615,7 +2634,7 @@ function scheduleWakeRestart(){
       showWakeStatus('👂 Wake jeda sebentar (mic sibuk), nyala lagi otomatis...');
       return;
     }
-    const delay = 400 + (wakeRestartCount * 450);
+    const delay = Math.min(250 + (wakeRestartCount * 250), 1500);
     wakeRestartTimer = setTimeout(function(){ wakeRestartTimer = null; try{ startWakeListen(); }catch(e){} }, delay);
   }catch(e){ try{ wakeRestartTimer = null; wakeRestartCount++; }catch(e2){} }
 }
