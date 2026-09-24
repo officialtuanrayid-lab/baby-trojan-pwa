@@ -2277,8 +2277,9 @@ function getIDVoice(){
 }
 let _lastMood = 'senang';
 function setT2Mood(m){ _lastMood = m || 'senang'; }
-function getTTSConfig(mood){
+function getTTSConfig(mood, ctx){
   mood = mood || _lastMood;
+  ctx = ctx || 'reply';
   const base = {rate:1.0, pitch:1.1};
   const moods = {
     senang:{rate:1.05, pitch:1.15}, rileks:{rate:0.98, pitch:1.08},
@@ -2286,14 +2287,24 @@ function getTTSConfig(mood){
     motivasi:{rate:1.08, pitch:1.18}, kaget:{rate:1.12, pitch:1.22},
     khawatir:{rate:0.92, pitch:1.0}, idle:{rate:0.88, pitch:0.98}
   };
+  const deltas = {
+    wake:     {rate: 0.04, pitch: 0.02},
+    greeting: {rate: 0.02, pitch: 0.02},
+    reply:    {rate: 0,    pitch: 0},
+    image:    {rate:-0.03, pitch: 0},
+    speaker:  {rate: 0,    pitch: 0}
+  };
   const m = moods[mood] || base;
-  return {rate:m.rate, pitch:m.pitch};
+  const d = deltas[ctx] || deltas.reply;
+  const rate = Math.max(0.85, Math.min(1.15, m.rate + (d.rate||0)));
+  const pitch = Math.max(0.95, Math.min(1.15, m.pitch + (d.pitch||0)));
+  return {rate: Math.round(rate*100)/100, pitch: Math.round(pitch*100)/100};
 }
-function configTTS(utterance, text, voiceMode){
+function configTTS(utterance, text, voiceMode, ctx){
   utterance.lang = 'id-ID';
   const v = getIDVoice();
   if(v) utterance.voice = v;
-  const cfg = (_voiceFlags && _voiceFlags.ratePitch === false) ? {rate:1.0, pitch:1.1} : getTTSConfig(_lastMood);
+  const cfg = (_voiceFlags && _voiceFlags.ratePitch === false) ? {rate:1.0, pitch:1.1} : getTTSConfig(_lastMood, ctx);
   utterance.rate = voiceMode ? cfg.rate : Math.min(cfg.rate * 1.02, 1.12);
   utterance.pitch = cfg.pitch;
 }
@@ -2304,10 +2315,39 @@ let ttsBusy = false;
 function cleanForTTS(t){
   try{
     t = String(t || '');
-    t = t.replace(/https?:\/\/\S+/g, ' ').replace(/[#*`_~\[\]{}|]/g, ' ');
+    t = t.replace(/https?:\/\/\S+/g, ' ').replace(/[#*`_~\[\]{}|<>]/g, ' ');
     t = t.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{2190}-\u{21FF}\u{FE0F}\u{1F900}-\u{1F9FF}\u{1FA70}-\u{1FAFF}]/gu, '');
     t = t.replace(/\b(gw|guw|gua)\b/gi, 'gue').replace(/\b(elu|eloe)\b/gi, 'elo').replace(/\blu\b/gi, 'lo');
+    t = t.replace(/\b(nggk|ngga|gak|gk|kagak|ngg)\b/gi, 'nggak');
+    t = t.replace(/\bgpp\b/gi, 'nggak papa');
+    t = t.replace(/\budh\b/gi, 'udah');
+    t = t.replace(/\bbgt\b/gi, 'banget');
+    t = t.replace(/\byg\b/gi, 'yang');
+    t = t.replace(/\b(dgn|dg)\b/gi, 'dengan');
+    t = t.replace(/\butk\b/gi, 'untuk');
+    t = t.replace(/\bjd\b/gi, 'jadi');
+    t = t.replace(/\bkrn\b/gi, 'karena');
+    t = t.replace(/\bmsh\b/gi, 'masih');
+    t = t.replace(/\bblm\b/gi, 'belum');
+    t = t.replace(/\btdk\b/gi, 'tidak');
+    t = t.replace(/\bcm\b/gi, 'cuma');
+    t = t.replace(/\bsm\b/gi, 'sama');
+    t = t.replace(/\bdlm\b/gi, 'dalam');
+    t = t.replace(/\bdri\b/gi, 'dari');
+    t = t.replace(/\bkpn\b/gi, 'kapan');
+    t = t.replace(/\blgi\b/gi, 'lagi');
+    t = t.replace(/\bsdh\b/gi, 'sudah');
+    t = t.replace(/\bstlh\b/gi, 'setelah');
+    t = t.replace(/\bspt\b/gi, 'seperti');
+    t = t.replace(/\b(wkwkwk+|wkw+|wk+)\b/gi, 'hehe');
+    t = t.replace(/\bgtw\b/gi, 'nggak tau').replace(/\bknp\b/gi, 'kenapa').replace(/\bbgtu\b/gi, 'begitu');
+    t = t.replace(/\b(lol|lmao)\b/gi, 'hehe');
+    t = t.replace(/\bko\b/gi, 'kok');
+    t = t.replace(/\baja\b/gi, 'aja');
+    t = t.replace(/&/g, ' dan ').replace(/%/g, ' persen ');
     t = t.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+    t = t.replace(/\.{3,}/g, '.').replace(/!{2,}/g, '!').replace(/\?{2,}/g, '?').replace(/,{2,}/g, ',');
+    t = t.replace(/\s+([.,!?])/g, '$1');
     t = t.replace(/\s+/g, ' ').trim();
     return t;
   }catch(e){ return String(t || ''); }
@@ -2317,12 +2357,12 @@ const NEURAL_FAIL_COOLDOWN = 90000;
 function neuralDown(){
   try{ return (Date.now() - _neuralFailAt) < NEURAL_FAIL_COOLDOWN; }catch(e){ return false; }
 }
-function speakWithSynth(text, isVoiceMode, onDone){
+function speakWithSynth(text, isVoiceMode, onDone, ctx){
   try{
     if(!text || !('speechSynthesis' in window)) return false;
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(cleanForTTS(text));
-    configTTS(u, text, isVoiceMode === true);
+    configTTS(u, text, isVoiceMode === true, ctx);
     isSpeaking = true;
     document.getElementById('avatar')?.classList.add('speaking');
     document.getElementById('voiceOrb')?.classList.add('speaking');
@@ -2342,15 +2382,15 @@ function speakWithSynth(text, isVoiceMode, onDone){
     return true;
   }catch(e){ isSpeaking = false; return false; }
 }
-function speakBotText(text, isVoiceMode, onDone){
+function speakBotText(text, isVoiceMode, onDone, ctx){
   if(!text || isSpeaking || ttsBusy) return;
   if(_voiceFlags && _voiceFlags.neuralTTS && !neuralDown()){
-    speakNeural(text, isVoiceMode, onDone);
+    speakNeural(text, isVoiceMode, onDone, ctx);
     return;
   }
-  speakWithSynth(text, isVoiceMode, onDone);
+  speakWithSynth(text, isVoiceMode, onDone, ctx);
 }
-async function speakNeural(text, isVoiceMode, onDone){
+async function speakNeural(text, isVoiceMode, onDone, ctx){
   if(!text || ttsBusy) return;
   ttsBusy = true;
   isSpeaking = true;
@@ -2367,7 +2407,7 @@ async function speakNeural(text, isVoiceMode, onDone){
     try{ if(voiceModeActive && autoMicEnabled) voiceReListen(); }catch(e){}
   };
   try{
-    const cfg = (_voiceFlags && _voiceFlags.ratePitch === false) ? {rate:1.0, pitch:1.1} : getTTSConfig(_lastMood);
+    const cfg = (_voiceFlags && _voiceFlags.ratePitch === false) ? {rate:1.0, pitch:1.1} : getTTSConfig(_lastMood, ctx);
     const pitch = Math.max(0.95, Math.min(1.10, parseFloat(cfg.pitch) || 1.0));
     const res = await fetch('/api/tts', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text: text, rate: cfg.rate, pitch: pitch})});
     const ct = res.headers.get('content-type') || '';
@@ -2386,13 +2426,21 @@ async function speakNeural(text, isVoiceMode, onDone){
     _neuralFailAt = Date.now();
     document.getElementById('avatar')?.classList.remove('speaking');
     document.getElementById('voiceOrb')?.classList.remove('speaking');
-    const ok = speakWithSynth(text, isVoiceMode, onDone);
+    const ok = speakWithSynth(text, isVoiceMode, onDone, ctx);
     if(!ok){ try{ if(onDone) onDone(); }catch(e2){} try{ if(voiceModeActive && autoMicEnabled) voiceReListen(); }catch(e3){} }
   }
 }
+function warmTTSWake(){
+  try{
+    if(document.hidden || typeof fetch !== 'function') return;
+    const wc = getTTSConfig('senang', 'wake');
+    fetch('/api/tts', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({text:'Siap, ada apa Tuan?', rate: wc.rate, pitch: wc.pitch})}).catch(function(){});
+  }catch(e){}
+}
 // ===== VOICE v1: feature flags + VAD AUTO-STOP (kelas kuning; fallback aman) =====
 let _voiceFlags = {vadAutoStop:true, ratePitch:true, bargeIn:true};
-try{ fetch('/api/voice/settings').then(function(r){ return r.json(); }).then(function(d){ if(d && typeof d==='object'){ _voiceFlags.vadAutoStop = d.vadAutoStop !== false; _voiceFlags.ratePitch = d.ratePitch !== false; _voiceFlags.bargeIn = d.bargeIn !== false; _voiceFlags.neuralTTS = d.neuralTTS === true; } }).catch(function(){}); }catch(e){}
+try{ fetch('/api/voice/settings').then(function(r){ return r.json(); }).then(function(d){ if(d && typeof d==='object'){ _voiceFlags.vadAutoStop = d.vadAutoStop !== false; _voiceFlags.ratePitch = d.ratePitch !== false; _voiceFlags.bargeIn = d.bargeIn !== false; _voiceFlags.neuralTTS = d.neuralTTS === true; } if(_voiceFlags && _voiceFlags.neuralTTS){ try{ warmTTSWake(); }catch(e2){} } }).catch(function(){}); }catch(e){}
 let _vadTimer = null;
 let _vadCtx = null;
 function stopVoiceVAD(){
@@ -2465,13 +2513,13 @@ function speakBotMsg(el) {
     document.getElementById('voiceOrb')?.classList.remove('speaking');
   };
   if(_voiceFlags && _voiceFlags.neuralTTS && !neuralDown()){
-    if(ttsBusy){ try{ speakWithSynth(text, false, donePlay); }catch(e){ donePlay(); } }
-    else { try{ speakNeural(text, false, donePlay); }catch(e){ donePlay(); } }
+    if(ttsBusy){ try{ speakWithSynth(text, false, donePlay, 'speaker'); }catch(e){ donePlay(); } }
+    else { try{ speakNeural(text, false, donePlay, 'speaker'); }catch(e){ donePlay(); } }
     return;
   }
   document.getElementById('avatar')?.classList.add('speaking');
   const u = new SpeechSynthesisUtterance(cleanForTTS(text));
-  configTTS(u, text, false);
+  configTTS(u, text, false, 'speaker');
   u.onend = donePlay;
   u.onerror = donePlay;
   window.speechSynthesis.speak(u);
@@ -2503,7 +2551,7 @@ function addMsg(text, sender) {
     });
   // Auto TTS — neural (edge-tts) kalau aktif, fallback speechSynthesis
   if ((voiceModeActive || autoVoice) && text && !isSpeaking) {
-    try { speakBotText(text, voiceModeActive); } catch(e) {}
+    try { speakBotText(text, voiceModeActive, null, 'reply'); } catch(e) {}
   }
   } else {
     const msg = document.createElement('div');
@@ -2514,10 +2562,10 @@ function addMsg(text, sender) {
   chat.scrollTop = chat.scrollHeight;
 }
 
-function playTTS(url, fallbackText) {
+function playTTS(url, fallbackText, ctx) {
   // Neural TTS (edge-tts) dulu kalau aktif — fallback ke speechSynthesis di dalam
   if (fallbackText && _voiceFlags && _voiceFlags.neuralTTS) {
-    speakNeural(fallbackText, false);
+    speakNeural(fallbackText, false, null, ctx);
     return;
   }
   // Try Web Speech API first (no server needed, works on Samsung)
@@ -2525,7 +2573,7 @@ function playTTS(url, fallbackText) {
     if (fallbackText && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(fallbackText);
-      configTTS(u, fallbackText, false);
+      configTTS(u, fallbackText, false, ctx);
       isSpeaking = true;
       document.getElementById('avatar').classList.add('speaking');
       document.getElementById('voiceOrb')?.classList.add('speaking');
@@ -2646,7 +2694,7 @@ async function getGreeting() {
     const data = await res.json();
     vt.textContent = data.reply || 'Halo Tuan Isaac!';
     if (data.audio || (data.reply && 'speechSynthesis' in window)) {
-      playTTS(data.audio, data.reply);
+      playTTS(data.audio, data.reply, 'greeting');
       ttsAudio.onended = () => {
         isSpeaking = false;
         document.getElementById('avatar')?.classList.remove('speaking');
@@ -2824,11 +2872,11 @@ function onWakeWord(){
     const vt = document.getElementById('voiceText'); if(vt) vt.textContent = '👋 Ada apa, Tuan?';
     const sub = document.getElementById('voiceSub'); if(sub) sub.textContent = 'Langsung ngomong aja...';
     try{
-      if(typeof speakBotText === 'function'){ speakBotText('Siap, ada apa Tuan?', true); }
+      if(typeof speakBotText === 'function'){ speakBotText('Siap, ada apa Tuan?', true, null, 'wake'); }
       else if('speechSynthesis' in window){
         window.speechSynthesis.cancel();
         const u = new SpeechSynthesisUtterance('Siap, ada apa Tuan?');
-        configTTS(u, 'Siap, ada apa Tuan?', true);
+        configTTS(u, 'Siap, ada apa Tuan?', true, 'wake');
         window.speechSynthesis.speak(u);
       }
     }catch(e){}
@@ -2912,7 +2960,7 @@ async function sendVoiceMessage(text) {
     addMsg(data.reply, 'bot'); if(data.suggestions&&data.suggestions.length) showSuggestions(data.suggestions);
     chatHistory.push({role:'assistant', text:data.reply});
     learnFromMessage(data.reply, 'assistant');
-    if (data.audio) playTTS(data.audio);
+    if (data.audio) playTTS(data.audio, null, 'reply');
     else if (voiceModeActive && autoMicEnabled) voiceReListen();
   } catch { vt.textContent = 'Error, coba lagi'; }
 }
@@ -5346,10 +5394,10 @@ function handleImageUpload(){
             try{ learnFromMessage(prompt, 'user'); learnFromMessage(data.reply, 'assistant'); }catch(e){}
           }
           if(voiceModeActive && typeof speakBotText === 'function'){
-            try{ speakBotText(data.reply, true); }catch(e){}
+            try{ speakBotText(data.reply, true, null, 'image'); }catch(e){}
           } else if(voiceModeActive && 'speechSynthesis' in window){
             const u = new SpeechSynthesisUtterance(data.reply.replace(/[#*`]/g,''));
-            configTTS(u, data.reply, true);
+            configTTS(u, data.reply, true, 'image');
             window.speechSynthesis.speak(u);
           }
         }

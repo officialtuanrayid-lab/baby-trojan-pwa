@@ -1,6 +1,7 @@
 name = "adaptia"
 main = "worker-current-live.js"
-compatibility_date = "2026-09-21"
+compatibility_date = "2026-09-01"
+compatibility_flags = ["web_socket_compression"]
 account_id = "90f83dd411034aaed5bad0c17576c159"
 
 kv_namespaces = [
