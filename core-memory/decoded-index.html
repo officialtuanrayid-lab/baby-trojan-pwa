@@ -16,7 +16,7 @@
 <link rel="manifest" href="/manifest.json?v=5">
 <link rel="icon" type="image/png" href="/icons/icon-192.png?v=2">
 <link rel="apple-touch-icon" href="/icons/icon-192.png?v=2">
-<title>ADAPTIA (v7.3.288)</title>
+<title>ADAPTIA (v7.3.289)</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -1540,7 +1540,7 @@ oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
 // === AUTO-UPDATE + PWA: register SW untuk fullscreen, force-clear hanya saat versi berubah ===
 (function(){
   try {
-    var VER = 'adaptia-v2.286';
+    var VER = 'adaptia-v2.287';
     var saved = localStorage.getItem('adaptia-ver');
     if (saved && saved !== VER) {
       // Versi berubah -> clear cache & reload sekali (bukan tiap load)
@@ -1734,6 +1734,8 @@ try { autoVoice = localStorage.getItem('adaptia_autoVoice') !== '0'; } catch(e) 
 let isRecording = false;
 let recognition = null;
 let wakeModeOn = true;
+let wakeIsMobile = false;
+try{ wakeIsMobile = /Android/i.test(navigator.userAgent||''); }catch(e){ wakeIsMobile = false; }
 let wakeRec = null;
 let wakeRestartTimer = null;
 let wakeRestartAt = 0;
@@ -2516,6 +2518,7 @@ function exitVoiceMode() {
   if (recognition) recognition.stop();
   isRecording = false;
   updateWaveform(false);
+  try{ if(!document.hidden) startWakeListen(); }catch(e){}
 }
 
 async function getGreeting() {
@@ -2552,6 +2555,21 @@ function toggleVoiceListen() {
 function showWakeStatus(txt){
   try{ var vt = document.getElementById('voiceText'); if(vt) vt.textContent = txt; }catch(e){}
 }
+function showWakeToast(txt){
+  try{
+    let t = document.getElementById('wakeToast');
+    if(!t){
+      t = document.createElement('div');
+      t.id = 'wakeToast';
+      t.style.cssText = 'position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:9999;background:rgba(20,20,28,.95);color:#fff;border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:8px 14px;font-size:12px;max-width:90%;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.4);transition:opacity .4s';
+      document.body.appendChild(t);
+    }
+    t.textContent = txt;
+    t.style.opacity = '1';
+    clearTimeout(t._h);
+    t._h = setTimeout(function(){ try{ t.style.opacity = '0'; }catch(e){} }, 6000);
+  }catch(e){}
+}
 function localWakeHit(buf){
   try{
     if(!buf) return false;
@@ -2584,7 +2602,10 @@ function scheduleWakeRestart(){
     if(!wakeModeOn || document.hidden) return;
     if(wakeRestartTimer) return;
     const now = Date.now();
-    if(wakeRestartAt && (now - wakeRestartAt) < 1000) return;
+    if(wakeRestartAt && (now - wakeRestartAt) < 1000){
+      wakeRestartTimer = setTimeout(function(){ wakeRestartTimer = null; try{ scheduleWakeRestart(); }catch(e){} }, 1000 - (now - wakeRestartAt));
+      return;
+    }
     if(!wakeRestartAt || (now - wakeRestartAt) > 60000) wakeRestartCount = 0;
     wakeRestartAt = now;
     wakeRestartCount++;
@@ -2601,24 +2622,31 @@ function scheduleWakeRestart(){
 function startWakeListen(){
   try{
     if(!wakeModeOn) return;
+    if(voiceModeActive) return;
     stopWakeListen();
     if(!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)){
+      wakeModeOn = false;
       showWakeStatus('⚠️ Wake butuh Chrome/Android — browser ini nggak support');
+      showWakeToast('⚠️ Wake butuh Chrome/Android — browser ini nggak support');
       return;
     }
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     const r = new SR();
     wakeRec = r;
     r.lang = 'id-ID';
-    r.continuous = true;
+    r.continuous = !wakeIsMobile;
     r.interimResults = true;
+    r.maxAlternatives = 3;
     let buf = '';
     let bufTs = Date.now();
     r.onstart = function(){ showWakeStatus('👂 Dengerin... panggil "Adaptia" / "Bang" / "Tuan"'); };
     r.onresult = function(e){
       try{
         let t = '';
-        for(let i=0;i<e.results.length;i++) t += e.results[i][0].transcript;
+        for(let i=0;i<e.results.length;i++){
+          const alts = e.results[i];
+          for(let j=0;j<alts.length && j<3;j++) t += ((alts[j] && alts[j].transcript) || '') + ' ';
+        }
         t = String(t||'').toLowerCase();
         const now = Date.now();
         if((now - bufTs) > 6000) buf = '';
@@ -2637,6 +2665,7 @@ function startWakeListen(){
       if(er === 'not-allowed' || er === 'service-not-allowed'){
         wakeModeOn = false;
         showWakeStatus('🎤 Izin mic ditolak — izinkan mic di pengaturan browser, lalu reload');
+        showWakeToast('🎤 Wake butuh izin mic — ketuk tombol mic sekali buat izinkan');
         return;
       }
       scheduleWakeRestart();
@@ -2669,8 +2698,9 @@ function onWakeWord(){
     try{ if(typeof startListening === 'function' && !isRecording && !isSpeaking) setTimeout(startListening, 500); }catch(e){}
   }catch(e){}
 }
-try{ if(wakeModeOn && !document.hidden) startWakeListen(); }catch(e){}
-try{ document.addEventListener('visibilitychange', function(){ if(document.hidden){ stopWakeListen(); } else if(wakeModeOn){ startWakeListen(); } }); }catch(e){}
+try{ if(!document.hidden) startWakeListen(); }catch(e){}
+try{ document.addEventListener('visibilitychange', function(){ if(document.hidden){ stopWakeListen(); } else { startWakeListen(); } }); }catch(e){}
+try{ window.addEventListener('pageshow', function(){ if(!document.hidden && !wakeRec) startWakeListen(); }); }catch(e){}
 // ===== END WAKE =====
 
 function startListening() {
@@ -2688,6 +2718,7 @@ function startListening() {
   const orb = document.getElementById('voiceOrb');
   const sub = document.getElementById('voiceSub');
   recognition.onstart = () => {
+    try{ wakeModeOn = true; }catch(e){}
     isRecording = true;
     orb.classList.add('listening');
     sub.textContent = 'Mendengarkan...'; vt.textContent = '...';
