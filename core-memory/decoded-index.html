@@ -2513,6 +2513,15 @@ function setAutoVoice(on){
   try{ const it = document.getElementById('voiceToggleItem'); if(it) it.style.opacity = autoVoice ? '1' : '0.5'; }catch(e){}
 }
 try{ fetch('/api/voice/settings').then(function(r){ return r.json(); }).then(function(d){ if(d && typeof d==='object'){ _voiceFlags.vadAutoStop = d.vadAutoStop !== false; _voiceFlags.ratePitch = d.ratePitch !== false; _voiceFlags.bargeIn = d.bargeIn !== false; _voiceFlags.neuralTTS = d.neuralTTS === true; if(typeof d.rate === 'number' && d.rate > 0 && d.rate <= 2) _voiceFlags.userRate = d.rate; if(typeof d.voiceName === 'string' && d.voiceName) _voiceFlags.voiceName = d.voiceName; _voiceFlags.wakeWords = Array.isArray(d.wakeWords) ? d.wakeWords.filter(function(w){ return typeof w === 'string' && /^[a-z0-9]{3,30}$/.test(w); }).slice(0,20) : []; } if(_voiceFlags && _voiceFlags.neuralTTS){ try{ warmTTSWake(); }catch(e2){} } }).catch(function(){}); }catch(e){}
+try{
+  const vk = 'adaptia_seen_voice296';
+  if(!localStorage.getItem(vk)){
+    setTimeout(function(){
+      try{ showWakeToast('🎙️ Voice v2: coba bilang "suara cewek", "cepetin", "pelanin", "baca ulang", atau "stop"'); }catch(e){}
+      try{ localStorage.setItem(vk, '1'); }catch(e){}
+    }, 2500);
+  }
+}catch(e){}
 let _vadTimer = null;
 let _vadCtx = null;
 function stopVoiceVAD(){
