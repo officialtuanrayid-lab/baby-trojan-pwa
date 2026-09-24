@@ -16,7 +16,7 @@
 <link rel="manifest" href="/manifest.json?v=5">
 <link rel="icon" type="image/png" href="/icons/icon-192.png?v=2">
 <link rel="apple-touch-icon" href="/icons/icon-192.png?v=2">
-<title>ADAPTIA (v7.3.290)</title>
+<title>ADAPTIA (v7.3.291)</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -1540,7 +1540,7 @@ oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
 // === AUTO-UPDATE + PWA: register SW untuk fullscreen, force-clear hanya saat versi berubah ===
 (function(){
   try {
-    var VER = 'adaptia-v2.288';
+    var VER = 'adaptia-v2.289';
     var saved = localStorage.getItem('adaptia-ver');
     if (saved && saved !== VER) {
       // Versi berubah -> clear cache & reload sekali (bukan tiap load)
@@ -2413,6 +2413,7 @@ function addMsg(text, sender) {
           document.getElementById('avatar')?.classList.remove('speaking');
           document.getElementById('voiceOrb')?.classList.remove('speaking');
         }, 750);
+        try{ if(voiceModeActive && autoMicEnabled) voiceReListen(); }catch(e){}
       };
       u.onend = clearSpeak;
       u.onerror = clearSpeak;
@@ -2445,7 +2446,7 @@ function playTTS(url, fallbackText) {
           document.getElementById('avatar').classList.remove('speaking');
           document.getElementById('voiceOrb')?.classList.remove('speaking');
         }, 750);
-        if (voiceModeActive && autoMicEnabled) setTimeout(startListening, 400);
+        if (voiceModeActive && autoMicEnabled) voiceReListen();
       };
       u.onend = clearSpeakP;
       u.onerror = clearSpeakP;
@@ -2464,7 +2465,7 @@ function playTTS(url, fallbackText) {
     isSpeaking = false;
     document.getElementById('avatar').classList.remove('speaking');
     document.getElementById('voiceOrb')?.classList.remove('speaking');
-    if (voiceModeActive && autoMicEnabled) setTimeout(startListening, 400);
+    if (voiceModeActive && autoMicEnabled) voiceReListen();
   };
 }
 
@@ -2504,14 +2505,41 @@ if(voiceBtn){
     catDragging=false;
   },{passive:true});
 }
+let voiceIdleTimer = null;
+function clearVoiceIdle(){
+  try{ if(voiceIdleTimer){ clearTimeout(voiceIdleTimer); voiceIdleTimer = null; } }catch(e){ voiceIdleTimer = null; }
+}
+function armVoiceIdle(){
+  try{
+    if(voiceIdleTimer) clearTimeout(voiceIdleTimer);
+    if(!voiceModeActive) return;
+    voiceIdleTimer = setTimeout(function(){
+      voiceIdleTimer = null;
+      try{
+        const recBusy = (typeof isRecording !== 'undefined' && isRecording) || (typeof isAudioRecording !== 'undefined' && isAudioRecording);
+        if(voiceModeActive && !recBusy && !isSpeaking) exitVoiceMode();
+      }catch(e){}
+    }, 10000);
+  }catch(e){}
+}
+function voiceReListen(){
+  try{
+    if(!voiceModeActive || !autoMicEnabled) return;
+    if(isSpeaking || isRecording) return;
+    armVoiceIdle();
+    setTimeout(function(){ try{ if(voiceModeActive && !isSpeaking && !isRecording) startListening(); }catch(e){} }, 400);
+  }catch(e){}
+}
 function enterVoiceMode() {
   voiceModeActive = true;
   floatingMic.classList.add('hidden');
   document.getElementById('voiceOverlay').classList.add('active');
   initWaveform();
   getGreeting();
+  armVoiceIdle();
 }
 function exitVoiceMode() {
+  clearVoiceIdle();
   voiceModeActive = false;
   document.getElementById('sendBtn')?.classList.remove('morphing');
   document.getElementById('voiceOverlay').classList.remove('active');
@@ -2715,6 +2743,7 @@ function onWakeWord(){
       }
     }catch(e){}
     try{ if(typeof startListening === 'function' && !isRecording && !isSpeaking) setTimeout(startListening, 500); }catch(e){}
+    armVoiceIdle();
   }catch(e){}
 }
 try{ if(!document.hidden) startWakeListen(); }catch(e){}
@@ -2746,6 +2775,7 @@ function startListening() {
   recognition.onresult = (e) => {
     let t = '';
     for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript;
+    if(t && t.length > 0) clearVoiceIdle();
     vt.textContent = t || '...';
   };
   recognition.onend = () => {
@@ -2793,6 +2823,7 @@ async function sendVoiceMessage(text) {
     chatHistory.push({role:'assistant', text:data.reply});
     learnFromMessage(data.reply, 'assistant');
     if (data.audio) playTTS(data.audio);
+    else if (voiceModeActive && autoMicEnabled) voiceReListen();
   } catch { vt.textContent = 'Error, coba lagi'; }
 }
 
