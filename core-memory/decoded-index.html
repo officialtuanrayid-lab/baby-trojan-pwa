@@ -16,7 +16,7 @@
 <link rel="manifest" href="/manifest.json?v=5">
 <link rel="icon" type="image/png" href="/icons/icon-192.png?v=2">
 <link rel="apple-touch-icon" href="/icons/icon-192.png?v=2">
-<title>ADAPTIA (v7.3.294)</title>
+<title>ADAPTIA (v7.3.295)</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -1540,7 +1540,7 @@ oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
 // === AUTO-UPDATE + PWA: register SW untuk fullscreen, force-clear hanya saat versi berubah ===
 (function(){
   try {
-    var VER = 'adaptia-v2.292';
+    var VER = 'adaptia-v2.293';
     var saved = localStorage.getItem('adaptia-ver');
     if (saved && saved !== VER) {
       // Versi berubah -> clear cache & reload sekali (bukan tiap load)
@@ -2296,7 +2296,8 @@ function getTTSConfig(mood, ctx){
   };
   const m = moods[mood] || base;
   const d = deltas[ctx] || deltas.reply;
-  const rate = Math.max(0.85, Math.min(1.15, m.rate + (d.rate||0)));
+  const ur = (_voiceFlags && _voiceFlags.userRate) ? _voiceFlags.userRate : 1.0;
+  const rate = Math.max(0.85, Math.min(1.15, (m.rate + (d.rate||0)) * ur));
   const pitch = Math.max(0.95, Math.min(1.15, m.pitch + (d.pitch||0)));
   return {rate: Math.round(rate*100)/100, pitch: Math.round(pitch*100)/100};
 }
@@ -2382,8 +2383,10 @@ function speakWithSynth(text, isVoiceMode, onDone, ctx){
     return true;
   }catch(e){ isSpeaking = false; return false; }
 }
+let lastSpokenText = '';
 function speakBotText(text, isVoiceMode, onDone, ctx){
   if(!text || isSpeaking || ttsBusy) return;
+  try{ lastSpokenText = text; }catch(e){}
   if(_voiceFlags && _voiceFlags.neuralTTS && !neuralDown()){
     speakNeural(text, isVoiceMode, onDone, ctx);
     return;
@@ -2396,7 +2399,7 @@ async function speakNeural(text, isVoiceMode, onDone, ctx){
   isSpeaking = true;
   document.getElementById('avatar')?.classList.add('speaking');
   document.getElementById('voiceOrb')?.classList.add('speaking');
-  const clearNeural = function(){
+  const finished = function(){
     ttsBusy = false;
     isSpeaking = false;
     setTimeout(function(){
@@ -2406,21 +2409,7 @@ async function speakNeural(text, isVoiceMode, onDone, ctx){
     try{ if(onDone) onDone(); }catch(e){}
     try{ if(voiceModeActive && autoMicEnabled) voiceReListen(); }catch(e){}
   };
-  try{
-    const cfg = (_voiceFlags && _voiceFlags.ratePitch === false) ? {rate:1.0, pitch:1.1} : getTTSConfig(_lastMood, ctx);
-    const pitch = Math.max(0.95, Math.min(1.10, parseFloat(cfg.pitch) || 1.0));
-    const res = await fetch('/api/tts', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text: text, rate: cfg.rate, pitch: pitch})});
-    const ct = res.headers.get('content-type') || '';
-    if(!res.ok || ct.indexOf('audio') < 0) throw new Error('tts http ' + res.status);
-    const blob = await res.blob();
-    if(blob.size < 100) throw new Error('tts empty');
-    const url = URL.createObjectURL(blob);
-    ttsAudio.pause();
-    ttsAudio.src = url;
-    ttsAudio.onended = clearNeural;
-    ttsAudio.onerror = clearNeural;
-    await ttsAudio.play().catch(function(){ clearNeural(); });
-  }catch(e){
+  const failAll = function(){
     ttsBusy = false;
     isSpeaking = false;
     _neuralFailAt = Date.now();
@@ -2428,6 +2417,64 @@ async function speakNeural(text, isVoiceMode, onDone, ctx){
     document.getElementById('voiceOrb')?.classList.remove('speaking');
     const ok = speakWithSynth(text, isVoiceMode, onDone, ctx);
     if(!ok){ try{ if(onDone) onDone(); }catch(e2){} try{ if(voiceModeActive && autoMicEnabled) voiceReListen(); }catch(e3){} }
+  };
+  try{
+    const cfg = (_voiceFlags && _voiceFlags.ratePitch === false) ? {rate:1.0, pitch:1.1} : getTTSConfig(_lastMood, ctx);
+    const pitch = Math.max(0.95, Math.min(1.10, parseFloat(cfg.pitch) || 1.0));
+    const voice = (_voiceFlags && _voiceFlags.voiceName) ? _voiceFlags.voiceName : '';
+    const cleaned = cleanForTTS(text);
+    const chunks = cleaned.length > 600 ? splitTTS(cleaned, 600) : [cleaned];
+    await playTTSChunks(chunks, 0, cfg.rate, pitch, voice, finished, failAll);
+  }catch(e){
+    failAll();
+  }
+}
+function splitTTS(text, maxLen){
+  try{
+    const out = [];
+    let cur = '';
+    const parts = String(text||'').split(/(?<=[.!?…])\s+/);
+    for(let i=0;i<parts.length;i++){
+      const seg = String(parts[i]||'').trim();
+      if(!seg) continue;
+      if((cur + ' ' + seg).trim().length > maxLen){
+        if(cur) out.push(cur);
+        cur = seg.length > maxLen ? seg.slice(0, maxLen) : seg;
+      } else {
+        cur = (cur + ' ' + seg).trim();
+      }
+    }
+    if(cur) out.push(cur);
+    return out.length ? out : [String(text||'').slice(0, maxLen)];
+  }catch(e){ return [String(text||'').slice(0, maxLen)]; }
+}
+async function playTTSChunks(chunks, idx, rate, pitch, voice, finished, failed){
+  if(idx >= chunks.length){ finished(); return; }
+  try{
+    const res = await fetch('/api/tts', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text: chunks[idx], rate: rate, pitch: pitch, voice: voice})});
+    const ct = res.headers.get('content-type') || '';
+    if(!res.ok || ct.indexOf('audio') < 0) throw new Error('tts http ' + res.status);
+    const blob = await res.blob();
+    if(blob.size < 100) throw new Error('tts empty');
+    const url = URL.createObjectURL(blob);
+    ttsAudio.pause();
+    ttsAudio.src = url;
+    const next = function(){ playTTSChunks(chunks, idx+1, rate, pitch, voice, finished, failed); };
+    ttsAudio.onended = next;
+    ttsAudio.onerror = next;
+    await ttsAudio.play().catch(function(){ next(); });
+  }catch(e){
+    if(idx === 0){ failed(); }
+    else {
+      const rest = chunks.slice(idx).join(' ');
+      ttsBusy = false;
+      isSpeaking = false;
+      _neuralFailAt = Date.now();
+      document.getElementById('avatar')?.classList.remove('speaking');
+      document.getElementById('voiceOrb')?.classList.remove('speaking');
+      const ok = speakWithSynth(rest, false, finished, 'reply');
+      if(!ok) finished();
+    }
   }
 }
 function warmTTSWake(){
@@ -2439,8 +2486,33 @@ function warmTTSWake(){
   }catch(e){}
 }
 // ===== VOICE v1: feature flags + VAD AUTO-STOP (kelas kuning; fallback aman) =====
-let _voiceFlags = {vadAutoStop:true, ratePitch:true, bargeIn:true};
-try{ fetch('/api/voice/settings').then(function(r){ return r.json(); }).then(function(d){ if(d && typeof d==='object'){ _voiceFlags.vadAutoStop = d.vadAutoStop !== false; _voiceFlags.ratePitch = d.ratePitch !== false; _voiceFlags.bargeIn = d.bargeIn !== false; _voiceFlags.neuralTTS = d.neuralTTS === true; } if(_voiceFlags && _voiceFlags.neuralTTS){ try{ warmTTSWake(); }catch(e2){} } }).catch(function(){}); }catch(e){}
+let _voiceFlags = {vadAutoStop:true, ratePitch:true, bargeIn:true, voiceName:'', userRate:1.0, wakeWords:[]};
+try{ _voiceFlags.userRate = parseFloat(localStorage.getItem('adaptia_voice_rate')) || 1.0; }catch(e){}
+try{ _voiceFlags.voiceName = localStorage.getItem('adaptia_tts_neural') || ''; }catch(e){}
+function saveVoicePref(body){
+  try{ fetch('/api/voice/settings', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body || {})}).catch(function(){}); }catch(e){}
+}
+function adjustVoiceRate(d){
+  try{
+    const cur = (_voiceFlags && _voiceFlags.userRate) || 1.0;
+    const next = Math.max(0.7, Math.min(1.4, Math.round((cur + (d||0)) * 100) / 100));
+    _voiceFlags.userRate = next;
+    try{ localStorage.setItem('adaptia_voice_rate', String(next)); }catch(e){}
+    saveVoicePref({rate: next});
+  }catch(e){}
+}
+function setNeuralVoice(name){
+  _voiceFlags.voiceName = name;
+  try{ localStorage.setItem('adaptia_tts_neural', name); }catch(e){}
+  saveVoicePref({voiceName: name});
+}
+function setAutoVoice(on){
+  autoVoice = !!on;
+  try{ localStorage.setItem('adaptia_autoVoice', autoVoice ? '1' : '0'); }catch(e){}
+  try{ const vtc = document.getElementById('voiceToggleCount'); if(vtc) vtc.textContent = autoVoice ? 'ON' : 'OFF'; }catch(e){}
+  try{ const it = document.getElementById('voiceToggleItem'); if(it) it.style.opacity = autoVoice ? '1' : '0.5'; }catch(e){}
+}
+try{ fetch('/api/voice/settings').then(function(r){ return r.json(); }).then(function(d){ if(d && typeof d==='object'){ _voiceFlags.vadAutoStop = d.vadAutoStop !== false; _voiceFlags.ratePitch = d.ratePitch !== false; _voiceFlags.bargeIn = d.bargeIn !== false; _voiceFlags.neuralTTS = d.neuralTTS === true; if(typeof d.rate === 'number' && d.rate > 0 && d.rate <= 2) _voiceFlags.userRate = d.rate; if(typeof d.voiceName === 'string' && d.voiceName) _voiceFlags.voiceName = d.voiceName; _voiceFlags.wakeWords = Array.isArray(d.wakeWords) ? d.wakeWords.filter(function(w){ return typeof w === 'string' && /^[a-z0-9]{3,30}$/.test(w); }).slice(0,20) : []; } if(_voiceFlags && _voiceFlags.neuralTTS){ try{ warmTTSWake(); }catch(e2){} } }).catch(function(){}); }catch(e){}
 let _vadTimer = null;
 let _vadCtx = null;
 function stopVoiceVAD(){
@@ -2765,9 +2837,11 @@ function localWakeHit(buf){
     // (3) detect kata "adaptia" yang ke-pecah spasi DI UCAPAN PENDEK: "ada pia" -> "adapia", "a departia" -> "adepartia"
     const joined = String(buf).toLowerCase().replace(/[^a-z]/g,'');
     if(joined.length <= 10 && joined.indexOf('adapun')===-1 && joined.indexOf('adapalagi')===-1 && /^(adap|adapt|adep|adept|adab)/.test(joined)) return true;
+    const custom = (_voiceFlags && Array.isArray(_voiceFlags.wakeWords)) ? _voiceFlags.wakeWords : [];
     const n = toks.length;
     for(let i=0;i<n;i++){
       const w = toks[i];
+      if(custom.indexOf(w) !== -1) return true;
       if(exact.indexOf(w) !== -1) return true;
       if(adaptLike(w) && black.indexOf(w)===-1) return true;
       if((w[0]==='a'||w[0]==='d') && w.length>=5 && w.length<=10 && black.indexOf(w)===-1 && editDist(w,'adaptia') <= 2) return true;
@@ -2863,6 +2937,7 @@ function startWakeListen(){
 function onWakeWord(){
   try{
     stopWakeListen();
+    try{ playBlip(720, 0.12); }catch(e){}
     try{
       voiceModeActive = true;
       const fm = document.getElementById('floatingMic'); if(fm) fm.classList.add('hidden');
@@ -2943,7 +3018,72 @@ function startListening() {
   recognition.start();
 }
 
+function normVoiceCmd(t){
+  try{ return String(t||'').toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim(); }catch(e){ return ''; }
+}
+function voiceCmdSay(t){
+  try{ const st=document.getElementById('voiceText'); if(st) st.textContent = t; }catch(e){}
+  try{ const su=document.getElementById('voiceSub'); if(su) su.textContent = ''; }catch(e){}
+}
+let _blipCtx = null;
+function playBlip(freq, dur){
+  try{
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return;
+    if(!_blipCtx || _blipCtx.state === 'closed') _blipCtx = new AC();
+    const o = _blipCtx.createOscillator(), g = _blipCtx.createGain();
+    o.type = 'sine'; o.frequency.value = freq || 800;
+    g.gain.setValueAtTime(0.07, _blipCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, _blipCtx.currentTime + (dur || 0.1));
+    o.connect(g); g.connect(_blipCtx.destination);
+    o.start(); o.stop(_blipCtx.currentTime + (dur || 0.1));
+  }catch(e){}
+}
+function handleVoiceCommand(raw){
+  const c = normVoiceCmd(raw);
+  if(!c || c.split(' ').length > 5) return false;
+  const is = function(){ const ps = Array.prototype.slice.call(arguments); return ps.indexOf(c) !== -1; };
+  if(is('stop','berhenti','diam','diem','tutup','close','udah','sudah')){
+    try{ if(window.speechSynthesis) window.speechSynthesis.cancel(); }catch(e){}
+    try{ if(ttsAudio) ttsAudio.pause(); }catch(e){}
+    try{ exitVoiceMode(); }catch(e){}
+    voiceCmdSay('Oke, berhenti.');
+    return true;
+  }
+  if(is('baca ulang','ulangi','ulang','ulangin','ulang lagi','baca lagi')){
+    if(lastSpokenText) speakBotText(lastSpokenText, true, null, 'reply');
+    else speakBotText('Tadi belum ada yang gue bacain, Tuan.', true, null, 'reply');
+    return true;
+  }
+  if(is('cepetin','cepatin','cepet','lebih cepat','cepat')){
+    adjustVoiceRate(0.1);
+    speakBotText('Oke, gue cepetin dikit.', true, null, 'reply');
+    return true;
+  }
+  if(is('pelanin','pelan','pelan dikit','lebih pelan','pelan pelan','slow down')){
+    adjustVoiceRate(-0.1);
+    speakBotText('Oke, gue pelanin dikit.', true, null, 'reply');
+    return true;
+  }
+  if(is('matikan suara','matiin suara','mute','diemin','jangan dibacain','nggak usah dibacain','jangan baca')){
+    setAutoVoice(false);
+    voiceCmdSay('Oke, suara dimatiin. Ketik aja ya.');
+    return true;
+  }
+  if(is('suara cewek','ganti suara cewek','pake suara cewek','pakai suara cewek','jadi cewek','suara perempuan','ganti suara perempuan','suara wanita')){
+    setNeuralVoice('id-ID-GadisNeural');
+    speakBotText('Oke, sekarang gue pake suara cewek.', true, null, 'reply');
+    return true;
+  }
+  if(is('suara cowok','ganti suara cowok','pake suara cowok','pakai suara cowok','suara laki','ganti suara laki','suara pria')){
+    setNeuralVoice('id-ID-ArdiNeural');
+    speakBotText('Oke, balik lagi ke suara cowok.', true, null, 'reply');
+    return true;
+  }
+  return false;
+}
 async function sendVoiceMessage(text) {
+  if(handleVoiceCommand(text)) return;
   const vt = document.getElementById('voiceText');
   chatHistory.push({role:'user', text:text});
   if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
@@ -4062,6 +4202,23 @@ async function refreshMood(){
   } catch(e) {}
 }
 setInterval(refreshMood, 30000);
+async function pollPendingSpeech(){
+  try{
+    if(document.hidden || (!voiceModeActive && !autoVoice)) return;
+    if(isSpeaking || ttsBusy) return;
+    const r = await fetch('/api/speech/pending?x=' + Date.now(), {cache:'no-store'});
+    if(!r.ok) return;
+    const d = await r.json();
+    const items = (d && d.items) || [];
+    if(!items.length) return;
+    try{ await fetch('/api/speech/clear', {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'}); }catch(e){}
+    const item = items[0];
+    if(item && item.text && !isSpeaking && !ttsBusy){
+      if(typeof speakBotText === 'function') speakBotText(item.text, true, null, 'reply');
+    }
+  }catch(e){}
+}
+setInterval(pollPendingSpeech, 15000);
 
 async function forceRefresh() {
   try {

@@ -297,9 +297,30 @@ align-items:center;justify-content:center;z-index:2;cursor:pointer}
 </div>
 
 
-<!-- Live Preview -->
+
+<!-- Voice & Wake -->
 <div class="section">
-<div class="section-title">👁️ Live Preview</div>
+<div class="section-title">🎙️ Suara & Wake</div>
+<div class="field">
+<label>Suara Neural</label>
+<select id="voiceName">
+<option value="">Ardi (Cowok) — default</option>
+<option value="id-ID-GadisNeural">Gadis (Cewek)</option>
+</select>
+</div>
+<div class="field">
+<label>Kecepatan Bicara (0.7 = pelan, 1.4 = cepat)</label>
+<input type="number" id="voiceRate" min="0.7" max="1.4" step="0.05" value="1.0">
+</div>
+<div class="field">
+<label>Kata Panggil Custom (pisah koma, huruf kecil)</label>
+<input type="text" id="wakeWords" placeholder="mis: halo adaptia, bang, ai" maxlength="120">
+</div>
+<button class="save-btn" onclick="saveVoicePrefs()">💾 Simpan Suara</button>
+<span id="voiceSaveMsg" style="font-size:12px;color:var(--dim);margin-left:8px"></span>
+</div>
+
+<!-- Live Preview -->
 <div class="preview" id="preview">
 <div class="preview-header">
 <div class="preview-avatar" id="prevAvatar" style="background:linear-gradient(135deg,#00d4aa,#7c3aed)">🤖</div>
@@ -555,6 +576,42 @@ function updateImagePreviews() {
 }
 
 
+
+// ===== Voice & Wake prefs (worker /api/voice/settings) =====
+async function loadVoicePrefs(){
+  try{
+    const r = await fetch('/api/voice/settings', {cache:'no-store'});
+    const d = await r.json();
+    try{ if(d && typeof d.voiceName === 'string') document.getElementById('voiceName').value = d.voiceName || ''; }catch(e){}
+    try{ if(d && typeof d.rate === 'number') document.getElementById('voiceRate').value = Math.max(0.7, Math.min(1.4, d.rate)); }catch(e){}
+    try{
+      const ww = (d && Array.isArray(d.wakeWords)) ? d.wakeWords : [];
+      document.getElementById('wakeWords').value = ww.join(', ');
+    }catch(e){}
+  }catch(e){}
+}
+async function saveVoicePrefs(){
+  const msg = document.getElementById('voiceSaveMsg');
+  try{
+    const body = {
+      voiceName: document.getElementById('voiceName').value || '',
+      rate: parseFloat(document.getElementById('voiceRate').value) || 1.0,
+      wakeWords: String(document.getElementById('wakeWords').value || '').split(',').map(function(w){ return w.trim(); }).filter(Boolean)
+    };
+    const r = await fetch('/api/voice/settings', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+    const d = await r.json();
+    if(msg){
+      msg.textContent = (d && d.status === 'ok') ? '✅ Tersimpan' : '⚠️ Gagal disimpan (kuota KV?) — coba lagi nanti';
+      msg.style.color = (d && d.status === 'ok') ? 'var(--accent)' : '#f87171';
+    }
+    try{ localStorage.setItem('adaptia_voice_rate', String(body.rate)); }catch(e){}
+    try{ localStorage.setItem('adaptia_tts_neural', body.voiceName); }catch(e){}
+  }catch(e){
+    if(msg){ msg.textContent = '⚠️ Gagal: ' + e.message; msg.style.color = '#f87171'; }
+  }
+}
+
+loadVoicePrefs();
 loadSettings();
 updateImagePreviews();
 </script>
