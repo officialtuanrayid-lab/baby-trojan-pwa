@@ -3,7 +3,7 @@
 # Usage: bash STABLE-DEPLOY.sh
 
 ACC="90f83dd411034aaed5bad0c17576c159"
-TOKEN="***REMOVED***"
+TOKEN="cfut_REMOVED"
 WORKER="adaptia"
 BACKUP="/root/baby-trojan-render/core-memory/worker-full-backup.js"
 

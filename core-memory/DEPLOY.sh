@@ -5,7 +5,7 @@
 # Aturan: CHECKPOINT-STABLE TIDAK PERNAH disentuh (lihat RULES-CHECKPOINT.md)
 # ============================================
 
-CF_TOKEN="***REMOVED***"
+CF_TOKEN=${CF_API_TOKEN:-$(cat /root/Documents/Codex/2026-09-22/gw-pengen-customize-adaptia-pwa/.wrangler/cf-token 2>/dev/null || echo cfut_REMOVED_USE_ENV)}
 ACCOUNT_ID="90f83dd411034aaed5bad0c17576c159"
 KV_NAMESPACE="20eefddba7ec402792a007453fd153a5"
 TEMPLATE_SCRIPT="backups/CHECKPOINT-STABLE-v7.3.4-final-20260912.js"
@@ -93,7 +93,7 @@ if [ "$HTTP" != "200" ]; then
 fi
 
 # [7/7] Git commit + push GitHub otomatis
-GITHUB_TOKEN="***REMOVED***"
+GITHUB_TOKEN="${GITHUB_TOKEN:-ghp_REMOVED_USE_ENV}"
 echo "[7/7] Git commit + push..."
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   cd /root/baby-trojan-render

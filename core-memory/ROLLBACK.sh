@@ -5,7 +5,7 @@
 # Opsi 2: Restore dari checkpoint lokal (pasti jalan)
 # ============================================
 
-CF_TOKEN="***REMOVED***"
+CF_TOKEN=${CF_API_TOKEN:-$(cat /root/Documents/Codex/2026-09-22/gw-pengen-customize-adaptia-pwa/.wrangler/cf-token 2>/dev/null || echo cfut_REMOVED_USE_ENV)}
 ACCOUNT_ID="90f83dd411034aaed5bad0c17576c159"
 BACKUP_DIR="$(cd "$(dirname "$0")" && pwd)/backups"
 

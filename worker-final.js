@@ -18,7 +18,7 @@ addEventListener('fetch', event => {
 });
 
 const API_BASE = 'https://api.cloudflare.com/client/v4/accounts/90f83dd411034aaed5bad0c17576c159/storage/kv/namespaces/20eefddba7ec402792a007453fd153a5/values';
-const CF_TOKEN = '***REMOVED***';
+const CF_TOKEN = "cfut_REMOVED_USE_ENV";
 const GEMINI_KEY = 'AQ.Ab8RN6IQJ-uZl3TxlsVsS2yv04whQfB3lvRXPK5Yrq0fQxJDzg';
 const AUTH_HASH = '***REMOVED***';
 const TG_BOT_TOKEN = '***REMOVED******REMOVED******REMOVED***';
