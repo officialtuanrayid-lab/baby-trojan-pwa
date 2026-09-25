@@ -16,7 +16,7 @@
 <link rel="manifest" href="/manifest.json?v=5">
 <link rel="icon" type="image/png" href="/icons/icon-192.png?v=2">
 <link rel="apple-touch-icon" href="/icons/icon-192.png?v=2">
-<title>ADAPTIA (v7.3.299)</title>
+<title>ADAPTIA (v7.3.300)</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -1540,7 +1540,7 @@ oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
 // === AUTO-UPDATE + PWA: register SW untuk fullscreen, force-clear hanya saat versi berubah ===
 (function(){
   try {
-    var VER = 'adaptia-v2.297';
+    var VER = 'adaptia-v2.298';
     var saved = localStorage.getItem('adaptia-ver');
     if (saved && saved !== VER) {
       // Versi berubah -> clear cache & reload sekali (bukan tiap load)
@@ -5106,9 +5106,14 @@ function updateAdaptia(){
 function fetchInfoPopData(){
   return Promise.all([
     fetch('/api/self-monitor',{cache:'no-store'}).then(function(r){return r.json();}).catch(function(){return null;}),
-    fetch('/api/self/state',{cache:'no-store'}).then(function(r){return r.json();}).catch(function(){return null;})
+    fetch('/api/self/state',{cache:'no-store'}).then(function(r){return r.json();}).catch(function(){return null;}),
+    fetch('/api/memory-index/status',{cache:'no-store'}).then(function(r){return r.json();}).catch(function(){return null;})
   ]);
 }
+function healthDot(cls){ return cls==='ok' ? '\u{1F7E2}' : (cls==='err' ? '\u{1F534}' : '\u{1F7E1}'); }
+function healthRefresh(btn){ try{ if(btn){ btn.disabled=true; var o=btn.textContent; btn.textContent='\u23F3...'; loadInfoPop().then(function(){ try{btn.disabled=false; btn.textContent=o;}catch(e){} }); } else { loadInfoPop(); } }catch(e){ try{loadInfoPop();}catch(x){} } }
+function healthReflect(){ try{ closeInfoPop(); }catch(e){} try{ quickSend('tulis refleksi hari ini'); }catch(x){} }
+function healthTidy(){ try{ openMemoryJournal(); }catch(e){} }
 function renderInfoPopRows(res){
   var body = document.getElementById('infoPopBody');
   if(!body) return;
@@ -5156,7 +5161,35 @@ function renderInfoPopRows(res){
     infoLinkRow('☁️','Cloudflare','https://dash.cloudflare.com/90f83dd411034aaed5bad0c17576c159/workers/services/view/adaptia'),
     infoLinkRow('⚡','Worker','https://adaptia.isaacdev.workers.dev/')
   ];
-  body.innerHTML = statusBar + infoGroup('Runtime','⚙️',runtimeRows) + infoGroup('Sistem','◉',systemRows) + infoGroup('Tautan','🌐',linkRows);
+  var memIdx = res[2] || null;
+  var memFacts = (d.memory && d.memory.facts != null) ? d.memory.facts : 0;
+  var ragCount = (d.rag && d.rag.count != null) ? d.rag.count : 0;
+  var entCount = (d.knowledgeGraph && d.knowledgeGraph.entities != null) ? d.knowledgeGraph.entities : 0;
+  var loosePending = (d.looseEnds && d.looseEnds.pending != null) ? d.looseEnds.pending : 0;
+  var idxItems = (memIdx && memIdx.total_items != null) ? memIdx.total_items : 0;
+  var moodNow = (d.identity && d.identity.mood) ? String(d.identity.mood) : 'senang';
+  var otakCls = (ragCount > 0 && memFacts > 0 && loosePending < 5) ? 'ok' : ((ragCount === 0 && memFacts === 0) ? 'err' : 'warn');
+  var otakTxt = healthDot(otakCls) + ' ' + (otakCls === 'ok' ? 'Sehat' : (otakCls === 'err' ? 'Kosong' : 'Cek')) + ' \u00B7 ' + memFacts + ' facts \u00B7 ' + ragCount + ' RAG' + (idxItems ? ' \u00B7 ' + idxItems + ' idx' : '');
+  var tubuhOk = (d.model && d.model.status === 'ok') && (d.kv && d.kv.status === 'ok');
+  var tubuhCls = (d.kv && d.kv.status !== 'ok') ? 'err' : (tubuhOk ? 'ok' : 'warn');
+  var shortModel = String(model || '').split('/').pop().substring(0, 22);
+  var tubuhTxt = healthDot(tubuhCls) + ' ' + (tubuhCls === 'ok' ? 'Sehat' : (tubuhCls === 'err' ? 'KV error' : 'Cooldown')) + ' \u00B7 ' + (shortModel || 'model?');
+  var jiwaCls = 'ok';
+  var jiwaTxt = healthDot(jiwaCls) + ' Stabil \u00B7 ' + moodNow;
+  var rencanaTxt = loosePending > 0 ? ('Selesaikan ' + loosePending + ' loose ends') : ((d.overall === 'healthy') ? 'Nggak ada PR \u00B7 sistem sehat' : 'Cek Runtime di bawah');
+  var healthRows = [
+    infoRow('🧠', 'Otak', otakTxt, otakCls),
+    infoRow('🫀', 'Tubuh', tubuhTxt, tubuhCls),
+    infoRow('💛', 'Jiwa', jiwaTxt, jiwaCls),
+    infoRow('📋', 'Maestro', rencanaTxt, loosePending > 0 ? 'warn' : 'ok')
+  ];
+  var healthActs = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">'
+    + '<button onclick="healthTidy()" style="flex:1;min-width:90px;padding:7px 6px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.07);color:#fff;font-size:11px;cursor:pointer">\u{1F9E0} Rapikan</button>'
+    + '<button onclick="healthRefresh(this)" style="flex:1;min-width:90px;padding:7px 6px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.07);color:#fff;font-size:11px;cursor:pointer">\u{1FAC0} Cek ulang</button>'
+    + '<button onclick="healthReflect()" style="flex:1;min-width:90px;padding:7px 6px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.07);color:#fff;font-size:11px;cursor:pointer">\u{1F49B} Refleksi</button>'
+    + '</div>';
+  var healthGroup = infoGroup('Kesehatan', '\u{1FA7A}', healthRows).replace('</section>', healthActs + '</section>');
+  body.innerHTML = statusBar + healthGroup + infoGroup('Runtime','⚙️',runtimeRows) + infoGroup('Sistem','◉',systemRows) + infoGroup('Tautan','🌐',linkRows);
 }
 function loadInfoPop(){
   var mySeq = ++infoPopSeq;
