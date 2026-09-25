@@ -20,3 +20,7 @@ worker-pre-*
 worker-v[0-9]*
 core-memory/backups/
 core-memory/full-backup*/
+
+# dump worker lama yang pernah bocor kredensial (histori sudah di-scrub, jangan di-commit lagi)
+worker-base-intel.js
+worker-final.js
