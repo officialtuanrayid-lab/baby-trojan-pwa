@@ -31,6 +31,7 @@ fi
 
 # [1] Backup worker yang lagi jalan
 BACKUP="core-memory/backups/predeploy-$(date +%Y%m%d-%H%M%S).js"
+mkdir -p "$(dirname "$BACKUP")"
 cp "$TEMPLATE" "$BACKUP"
 echo "[1/6] Backup: $BACKUP"
 
