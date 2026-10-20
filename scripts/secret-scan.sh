@@ -9,7 +9,11 @@ else
   FILES=$(git diff --cached --name-only --diff-filter=ACM)
 fi
 [ -z "$FILES" ] && { echo "secret-scan: tidak ada file berubah, aman."; exit 0; }
-HITS=$(echo "$FILES" | xargs -r rg -l -E "$PATTERNS" 2>/dev/null)
+if ! command -v rg >/dev/null 2>&1; then
+  echo "⛔ secret-scan: 'rg' tidak tersedia — commit DIBLOKIR."
+  exit 1
+fi
+HITS=$(echo "$FILES" | xargs -r rg -l -e "$PATTERNS")
 if [ -n "$HITS" ]; then
   echo "⛔ secret-scan: pola kredensial ketemu — commit DIBLOKIR:"
   echo "$HITS"
