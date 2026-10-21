@@ -1,0 +1,13 @@
+{
+  "name": "adaptia",
+  "private": true,
+  "description": "Adaptia — AI Partner Pribadi (Cloudflare Workers PWA)",
+  "scripts": {
+    "sync:live": "bash sync-live.sh",
+    "build:dry": "bash adaptia.sh --dry-run",
+    "deploy": "bash adaptia.sh"
+  },
+  "devDependencies": {
+    "wrangler": "4.151.3"
+  }
+}

@@ -10,6 +10,10 @@
 set -e
 cd "$(dirname "$0")"
 
+# wrangler lokal (ikut repo via package.json), fallback ke global
+WRANGLER="$(pwd)/node_modules/.bin/wrangler"
+[ -x "$WRANGLER" ] || WRANGLER="wrangler"
+
 DRY=0
 if [ "${1:-}" = "--dry-run" ]; then DRY=1; fi
 
@@ -60,14 +64,14 @@ node --check "$OUTPUT"
 
 if [ "$DRY" = "1" ]; then
   echo "[5/6] DRY-RUN (tanpa deploy)"
-  CLOUDFLARE_API_TOKEN="$(cat /root/.cf-token)" wrangler deploy "$OUTPUT" --config wrangler.toml --dry-run 2>&1 | tail -n 12
+  CLOUDFLARE_API_TOKEN="$(cat /root/.cf-token)" "$WRANGLER" deploy "$OUTPUT" --config wrangler.toml --dry-run 2>&1 | tail -n 12
   echo "[6/6] Selesai (dry-run). File siap: $OUTPUT"
   exit 0
 fi
 
 # [5] Deploy
 echo "[5/6] Deploy ke Cloudflare..."
-CLOUDFLARE_API_TOKEN="$(cat /root/.cf-token)" wrangler deploy "$OUTPUT" --config wrangler.toml 2>&1 | tail -n 14
+CLOUDFLARE_API_TOKEN="$(cat /root/.cf-token)" "$WRANGLER" deploy "$OUTPUT" --config wrangler.toml 2>&1 | tail -n 14
 
 # [6] Verify
 echo "[6/6] Verify live..."
