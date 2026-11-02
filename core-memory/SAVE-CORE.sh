@@ -13,7 +13,7 @@ echo "=== ADAPTIA SAVE-CORE ==="
 echo "Extracting core memory from deployed worker..."
 
 # Fetch current worker
-curl -s "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/workers/scripts/babytrojan" \
+curl -s "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/workers/scripts/adaptia" \
   -H "Authorization: Bearer ${CF_TOKEN}" -o /tmp/worker_extract.js
 
 # Extract systemContext

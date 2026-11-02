@@ -125,6 +125,8 @@ greeting, dashboard, build, apply, self, self-monitor, automation.
   `/root/.codex/AGENTS.md` (0 byte, tak terpakai) dihapus.
   Dry-run lulus dgn wrangler lokal.
 - **STATE SEKARANG:** commit lokal di depan `origin/main` — **BELUM di-push**.
+
+- **Safety net status:** `core-memory/SAVE-CORE.sh` backup core memory, `core-memory/ROLLBACK.sh` restore lewat dashboard, `scripts/safe-deploy.sh` auto-rollback via Cloudflare. Checkpoint lokal sudah tidak ada → restore manual jika KV salah.
   Belum ada customisasi, belum ada deploy.
 
 ## 7. CATATAN UNTUK SESI BARU
