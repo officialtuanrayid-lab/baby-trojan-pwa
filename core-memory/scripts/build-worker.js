@@ -58,9 +58,11 @@ function main() {
   // 2. Bump title ADAPTIA (vX.Y.Z) — cosmetic
   const titleRe = /<title>ADAPTIA \(v(\d+\.\d+\.\d+)\)<\/title>/;
   const tm = html.match(titleRe);
+  let newTitleVer = null;
   if (tm) {
-    html = html.replace(titleRe, '<title>ADAPTIA (v' + bumpPatch(tm[1]) + ')</title>');
-    changed.push('title v' + tm[1] + ' -> v' + bumpPatch(tm[1]));
+    newTitleVer = bumpPatch(tm[1]);
+    html = html.replace(titleRe, '<title>ADAPTIA (v' + newTitleVer + ')</title>');
+    changed.push('title v' + tm[1] + ' -> v' + newTitleVer);
   }
 
   // 3. Bump SW cache name inside /sw.js asset
@@ -87,6 +89,17 @@ function main() {
   const b64 = Buffer.from(html, 'utf8').toString('base64');
   // Ganti SEMUA '/index.html'?? tidak — hanya yang pertama (utama)
   template = template.replace(htmlRe, "'/index.html': '" + b64 + "'");
+
+  // 4b. Inject BUILD_VERSION ke worker (samakan dgn title UI)
+  if (newTitleVer) {
+    const buildRe = /const BUILD_VERSION = '[^']*';/;
+    if (!buildRe.test(template)) {
+      console.error('ERROR: const BUILD_VERSION tidak ditemukan di template');
+      process.exit(1);
+    }
+    template = template.replace(buildRe, "const BUILD_VERSION = 'v" + newTitleVer + "';");
+    changed.push('BUILD_VERSION -> v' + newTitleVer);
+  }
 
   // 5. Verifikasi hasil
   const check = template.match(/'\/index\.html':\s*'([^']+)'/);

@@ -75,19 +75,20 @@ tidak ada (fail-closed). Terverifikasi: token palsu → exit 1 (diblokir).
 
 ## 4. STATE SYNC (penting!)
 
-**Sudah disinkronkan `bash sync-live.sh` pada 2026-10-20:**
+**Sudah disinkronkan ke live pada 2026-11-02:**
 
-- `worker-current-live.js` dan `core-memory/decoded-index.html` = **v7.3.312**
-- SW cache **adaptia-s87**
-- `diff bundle repo vs HTML live` = **identik, 0 selisih**
-- Build berikutnya hasil **v7.3.313 / v2.310 / s88** (naik, bukan mundur)
+- `worker-current-live.js` dan `core-memory/decoded-index.html` = **v7.3.314**
+- SW cache **adaptia-s89**, cache UI **adaptia-v2.311**
+- `/api/health` live = `v7.3.314`
+- `diff HTML repo vs HTML live` = **identik, 0 selisih**
+- Build berikutnya hasil **v7.3.315 / v2.312 / s90** (naik, bukan mundur)
 
 → **Aman untuk customize lalu deploy.** Kalau ada deploy manual dari
 Cloudflare Dashboard setelah ini, jalankan `sync-live.sh` lagi dulu.
 
 ## 5. API LIVE (terverifikasi HTTP 200)
 
-`/api/health` (→ `7.3.4-models-upgrade`, platform `cloudflare-workers`),
+`/api/health` (→ `v7.3.314`, platform `cloudflare-workers`),
 `/api/mood`, `/config.json`, `/manifest.json`, `/auth.html`,
 `/api/persona`, `/api/identity`, `/api/plugins`.
 
@@ -124,7 +125,12 @@ greeting, dashboard, build, apply, self, self-monitor, automation.
   `wrangler` jadi `devDependency` lokal (`package.json`),
   `/root/.codex/AGENTS.md` (0 byte, tak terpakai) dihapus.
   Dry-run lulus dgn wrangler lokal.
-- **STATE SEKARANG:** commit lokal di depan `origin/main` — **BELUM di-push**.
+- **2026-11-02** — Tuning model & memori (Gemini multi-key, fallback RAG
+  berbasis kata kunci saat embedding mati, watchdog memory health) sudah
+  live sebagai **v7.3.314**. Repo, live, dan `AGENTS.md` disinkronkan;
+  commit di-push ke `origin/main`.
+- **STATE SEKARANG:** repo == live **v7.3.314**, working tree bersih,
+  `origin/main` sudah sama dengan lokal.
 
 - **Safety net status:** `core-memory/SAVE-CORE.sh` backup core memory, `core-memory/ROLLBACK.sh` restore lewat dashboard, `scripts/safe-deploy.sh` auto-rollback via Cloudflare. Checkpoint lokal sudah tidak ada → restore manual jika KV salah.
   Belum ada customisasi, belum ada deploy.
