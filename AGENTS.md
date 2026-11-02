@@ -127,10 +127,12 @@ greeting, dashboard, build, apply, self, self-monitor, automation.
   Dry-run lulus dgn wrangler lokal.
 - **2026-11-02** — Tuning model & memori (Gemini multi-key, fallback RAG
   berbasis kata kunci saat embedding mati, watchdog memory health) sudah
-  live sebagai **v7.3.314**. Repo, live, dan `AGENTS.md` disinkronkan;
-  commit di-push ke `origin/main`.
+  live sebagai **v7.3.314**. Repo, live, dan `AGENTS.md` disinkronkan.
+  Perubahan di-commit lokal sebagai `a510e71`, **BELUM di-push** —
+  mesin ini tidak punya kredensial GitHub (`gh` belum login, tak ada
+  token/SSH key).
 - **STATE SEKARANG:** repo == live **v7.3.314**, working tree bersih,
-  `origin/main` sudah sama dengan lokal.
+  lokal **di depan `origin/main`** (push tertunda sampai kredensial ada).
 
 - **Safety net status:** `core-memory/SAVE-CORE.sh` backup core memory, `core-memory/ROLLBACK.sh` restore lewat dashboard, `scripts/safe-deploy.sh` auto-rollback via Cloudflare. Checkpoint lokal sudah tidak ada → restore manual jika KV salah.
   Belum ada customisasi, belum ada deploy.
