@@ -5,6 +5,7 @@
 // Usage: node build-worker.js <html> <template-worker> <output>
 // ============================================
 const fs = require('fs');
+const path = require('path');
 
 // Bump helper: versi "a.b" -> "a.(b+1)"
 function bumpMinor(v) {
@@ -36,7 +37,42 @@ function main() {
 
   let html = fs.readFileSync(htmlPath, 'utf8');
   let template = fs.readFileSync(templatePath, 'utf8');
+  const extensionPath = path.resolve(__dirname, '../../scripts/worker-backend-extension.js');
+  const extension = fs.readFileSync(extensionPath, 'utf8').trim();
   const changed = [];
+
+  // Keep backend additions in a small editable source file and inject a
+  // marked block into the generated Worker. Replacing the marked block makes
+  // repeated builds idempotent even when the template is already generated.
+  const extStart = '/* ADAPTIA_BACKEND_EXTENSION_START */';
+  const extEnd = '/* ADAPTIA_BACKEND_EXTENSION_END */';
+  const extBlock = `${extStart}\n${extension}\n${extEnd}`;
+  const existingExtension = new RegExp(`${extStart}[\\s\\S]*?${extEnd}`);
+  if (existingExtension.test(template)) {
+    template = template.replace(existingExtension, extBlock);
+  } else {
+    const handlerMarker = 'async function handleRequest(event) {';
+    if (!template.includes(handlerMarker)) {
+      console.error('ERROR: handleRequest tidak ditemukan untuk injeksi backend extension');
+      process.exit(1);
+    }
+    template = template.replace(handlerMarker, `${extBlock}\n\n${handlerMarker}`);
+  }
+  const dispatchStart = '  /* ADAPTIA_BACKEND_EXTENSION_DISPATCH_START */';
+  const dispatchEnd = '  /* ADAPTIA_BACKEND_EXTENSION_DISPATCH_END */';
+  const dispatchBlock = `${dispatchStart}\n  const extensionResponse = await adaptiaBackendExtension(request, path, method, CORS);\n  if (extensionResponse) return extensionResponse;\n${dispatchEnd}`;
+  const existingDispatch = new RegExp(`${dispatchStart}[\\s\\S]*?${dispatchEnd}`);
+  if (existingDispatch.test(template)) {
+    template = template.replace(existingDispatch, dispatchBlock);
+  } else {
+    const notFoundMarker = "return new Response('Adaptia - Not Found'";
+    if (!template.includes(notFoundMarker)) {
+      console.error('ERROR: response 404 Worker tidak ditemukan untuk dispatch extension');
+      process.exit(1);
+    }
+    template = template.replace(notFoundMarker, `${dispatchBlock}\n  ${notFoundMarker}`);
+  }
+  changed.push('backend extension source injected');
 
   // 1. Bump adaptia-vX.Y (cache-bust auto-update token) — ALL occurrences
   const verRe = /adaptia-v(\d+\.\d+)/g;

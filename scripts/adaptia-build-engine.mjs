@@ -150,9 +150,11 @@ try {
   execFileSync('bash', ['adaptia.sh', '--dry-run'], { stdio: 'inherit' });
   if (mode === 'deploy') {
     if (!process.env.CLOUDFLARE_API_TOKEN) throw new Error('CLOUDFLARE_API_TOKEN belum tersedia');
-    await fs.writeFile('/root/.cf-token', process.env.CLOUDFLARE_API_TOKEN, { mode: 0o600 });
-    try { execFileSync('bash', ['adaptia.sh'], { stdio: 'inherit' }); }
-    finally { await fs.writeFile('/root/.cf-token', '', { mode: 0o600 }); }
+    execFileSync('bash', ['scripts/safe-deploy.sh'], {
+      stdio: 'inherit',
+      env: { ...process.env, FILE: 'worker-latest.js', WRANGLER_BIN: path.join(root, 'node_modules/.bin/wrangler') }
+    });
+    await fs.copyFile('worker-latest.js', 'worker-current-live.js');
   }
   execFileSync('git', ['config', 'user.name', 'Adaptia Build Engine']);
   execFileSync('git', ['config', 'user.email', 'adaptia-build-engine@users.noreply.github.com']);
