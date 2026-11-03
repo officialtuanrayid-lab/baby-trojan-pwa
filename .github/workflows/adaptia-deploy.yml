@@ -45,5 +45,5 @@ jobs:
           # Deploy the freshly built bundle through the guarded deployer.
           # It captures the active version and automatically rolls back when
           # health/self-monitor checks fail after propagation.
-          FILE=worker-latest.js bash scripts/safe-deploy.sh
+          FILE=worker-latest.js WRANGLER_BIN="$PWD/node_modules/.bin/wrangler" bash scripts/safe-deploy.sh
           cp worker-latest.js worker-current-live.js
