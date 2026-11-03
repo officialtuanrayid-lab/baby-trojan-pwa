@@ -16,7 +16,7 @@
 <link rel="manifest" href="/manifest.json?v=5">
 <link rel="icon" type="image/png" href="/icons/icon-192.png?v=2">
 <link rel="apple-touch-icon" href="/icons/icon-192.png?v=2">
-<title>ADAPTIA (v7.3.314)</title>
+<title>ADAPTIA (v7.3.378)</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -523,7 +523,21 @@ word-wrap:break-word;position:relative;
 border:1px solid rgba(255,255,255,0.35);
 box-shadow:0 2px 12px rgba(255,255,255,0.15),0 0 20px rgba(124,58,237,0.08),inset 0 1px 0 rgba(255,255,255,0.05);
 }
-.msg-row.bot .msg-content a{color:var(--accent);text-decoration:none}
+.chat-line{display:block;min-height:1.5em}
+.chat-spacer{display:block;height:.42em}
+.chat-heading{display:block;font-weight:750;color:#fff;margin:9px 0 4px;line-height:1.35}
+.chat-heading:first-child{margin-top:0}
+.chat-quote{display:block;border-left:3px solid var(--accent);padding:4px 0 4px 10px;margin:5px 0;color:rgba(255,255,255,.78);font-style:italic}
+.chat-rule{display:block;height:1px;background:rgba(255,255,255,.18);margin:9px 0}
+.chat-check{color:var(--accent);font-weight:700}
+.chat-list{display:flex;flex-direction:column;gap:7px;margin:5px 0 7px}
+.chat-list-item{display:grid;grid-template-columns:24px minmax(0,1fr);column-gap:6px;align-items:start;line-height:1.5}
+.chat-list-marker{color:var(--accent);font-weight:700;text-align:right;padding-top:0}
+.chat-list-body{min-width:0}
+.chat-list-item + .chat-line{margin-top:4px}
+.msg-row.bot .msg-content a{color:var(--accent);text-decoration:none;overflow-wrap:anywhere}
+.msg-row.bot .msg-content strong{font-weight:750;color:#fff}
+.msg-row.bot .msg-content code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9em;overflow-wrap:anywhere}
 .msg-speaker{
 position:absolute;top:-21px;left:46px;width:22px;height:22px;
 border-radius:50%;border:none;background:rgba(255,255,255,0.08);
@@ -780,7 +794,7 @@ position:fixed;left:14px;bottom:76px;width:190px;z-index:42;
 background:rgba(10,12,20,0.30);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
 border:1px solid rgba(255,255,255,0.85);border-radius:18px;
 box-shadow:0 0 12px rgba(255,255,255,0.30),0 0 36px rgba(255,255,255,0.08),inset 0 0 14px rgba(255,255,255,0.08),inset 0 0 0 1px rgba(255,255,255,0.12),0 16px 48px rgba(0,0,0,0.4);
-overflow:hidden;opacity:0;visibility:hidden;transform:translateY(16px) scale(0.92);filter:blur(6px);
+overflow:hidden;max-height:min(72vh,620px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.35) transparent;opacity:0;visibility:hidden;transform:translateY(16px) scale(0.92);filter:blur(6px);
 transition:opacity .35s cubic-bezier(.22,1,.36,1),transform .45s cubic-bezier(.22,1,.36,1),filter .35s cubic-bezier(.22,1,.36,1),visibility 0s linear .45s;
 }
 .cat-panel.active{
@@ -816,14 +830,101 @@ color:#e0e0e0;font-size:14px;font-weight:500;transition:all 0.15s;border-left:3p
 }
 .cat-item:last-child{border-bottom:none}
 .cat-item:hover{background:linear-gradient(135deg,rgba(255,255,255,0.1),rgba(255,255,255,0.04));border-left-color:rgba(255,255,255,0.4);color:#fff}
+.cat-item:active{transform:scale(.98);background:rgba(255,255,255,.12)}
+.cat-panel::-webkit-scrollbar{width:4px}.cat-panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,.28);border-radius:8px}
+
+/* Finance shortcuts — the primary workflow for the financial advisor */
+#grpFinance .cat-group-header{background:linear-gradient(135deg,rgba(0,212,170,.12),transparent)}
+#grpFinance .cat-group-icon{filter:drop-shadow(0 0 5px rgba(0,212,170,.55))}
+#grpFinance .cat-item .cat-em{background:rgba(0,212,170,.12);box-shadow:0 0 12px rgba(0,212,170,.12)}
+#grpFinance .cat-item:hover{border-left-color:var(--accent,#00d4aa)}
+#grpWork .cat-group-header{background:linear-gradient(135deg,rgba(139,156,255,.12),transparent)}
+#grpWork .cat-group-icon{filter:drop-shadow(0 0 5px rgba(139,156,255,.55))}
+#grpWork .cat-item .cat-em{background:rgba(139,156,255,.12);box-shadow:0 0 12px rgba(139,156,255,.12)}
+#grpWork .cat-item:hover{border-left-color:#8b9cff}
+#grpProject .cat-group-header{background:linear-gradient(135deg,rgba(192,132,252,.12),transparent)}
+#grpProject .cat-group-icon{filter:drop-shadow(0 0 5px rgba(192,132,252,.55))}
+#grpProject .cat-item .cat-em{background:rgba(192,132,252,.12);box-shadow:0 0 12px rgba(192,132,252,.12)}
+#grpProject .cat-item:hover{border-left-color:#c084fc}
+#grpCore{display:none!important}
+#grpKategori{display:none!important}
+
+/* Dedicated finance workspace */
+.finance-workspace{position:fixed;inset:0;z-index:240;display:none;flex-direction:column;background:radial-gradient(circle at 80% 0%,rgba(0,212,170,.12),transparent 34%),#080b12;color:var(--text);overflow:hidden}
+.finance-workspace.show{display:flex}
+.finance-head{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.12);background:rgba(8,11,18,.88);backdrop-filter:blur(18px)}
+.finance-head-icon{font-size:24px}.finance-head-title{font-size:16px;font-weight:700;flex:1}.finance-head-sub{font-size:11px;color:var(--dim);display:block;margin-top:3px}
+.finance-close{border:0;background:rgba(255,255,255,.08);color:#fff;border-radius:10px;width:34px;height:34px;font-size:20px;cursor:pointer}
+.finance-tabs{display:flex;gap:7px;padding:10px 14px;overflow-x:auto;border-bottom:1px solid rgba(255,255,255,.1)}
+.finance-tab{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:var(--dim);border-radius:18px;padding:8px 13px;white-space:nowrap;cursor:pointer;font-size:12px}
+.finance-tab.active{background:var(--accent,#00d4aa);border-color:var(--accent,#00d4aa);color:#06100e;font-weight:700}
+.finance-body{flex:1;overflow-y:auto;padding:14px;max-width:760px;width:100%;box-sizing:border-box;margin:0 auto}
+.finance-pane{display:none}.finance-pane.active{display:block}.finance-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.finance-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:13px}.finance-card-label{font-size:11px;color:var(--dim);margin-bottom:7px}.finance-card-value{font-size:18px;font-weight:700}.finance-positive{color:#55e6ac}.finance-negative{color:#ff8d8d}.finance-muted{color:var(--dim);font-size:12px}.finance-list{display:flex;flex-direction:column;gap:8px}.finance-row{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border-radius:11px;padding:10px}.finance-row-main{flex:1;min-width:0}.finance-row-title{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.finance-row-meta{font-size:11px;color:var(--dim);margin-top:3px}.finance-row-amount{font-size:12px;font-weight:700}.finance-form{display:flex;gap:8px;margin-bottom:12px}.finance-input{flex:1;min-width:0;border:1px solid rgba(255,255,255,.14);border-radius:10px;background:rgba(255,255,255,.06);color:#fff;padding:10px}.finance-button{border:0;border-radius:10px;background:var(--accent,#00d4aa);color:#06100e;font-weight:700;padding:10px 13px;cursor:pointer}.finance-chat{margin-top:16px;border-top:1px solid rgba(255,255,255,.1);padding-top:14px}.finance-chat-title{font-size:13px;font-weight:700;margin-bottom:8px}.finance-chat-log{display:flex;flex-direction:column;gap:7px;max-height:210px;overflow-y:auto;margin-bottom:8px}.finance-chat-msg{padding:9px 11px;border-radius:12px;max-width:88%;font-size:12px;line-height:1.45}.finance-chat-msg.user{align-self:flex-end;background:rgba(0,212,170,.18)}.finance-chat-msg.bot{align-self:flex-start;background:rgba(255,255,255,.08)}
+@media(max-width:430px){.finance-grid{grid-template-columns:1fr}.finance-body{padding:12px}}
+
+/* Work cashflow responsive form */
+form[onsubmit="workSaveCashflow(event)"],.work-cashflow-form{display:grid!important;grid-template-columns:minmax(130px,1fr) minmax(180px,2fr) minmax(120px,1fr) minmax(130px,1fr) auto;gap:8px;align-items:stretch}
+form[onsubmit="workSaveCashflow(event)"] #workCashflowPurchaseFields[style*="display: flex"],.work-cashflow-form #workCashflowPurchaseFields[style*="display: contents"]{display:contents!important}
+form[onsubmit="workSaveCashflow(event)"] #workCashflowPurchaseFields small,.work-cashflow-form #workCashflowPurchaseFields small{align-self:center}
+form[onsubmit="workSaveCashflow(event)"] .finance-button,.work-cashflow-form .finance-button{white-space:nowrap}
+@media(max-width:700px){form[onsubmit="workSaveCashflow(event)"],.work-cashflow-form{grid-template-columns:1fr 1fr}form[onsubmit="workSaveCashflow(event)"] #workCashflowNote,.work-cashflow-form #workCashflowNote{grid-column:span 2}form[onsubmit="workSaveCashflow(event)"] #workCashflowPurchaseFields,.work-cashflow-form #workCashflowPurchaseFields{grid-column:span 2;display:grid!important;grid-template-columns:1fr 1fr;gap:8px}form[onsubmit="workSaveCashflow(event)"] #workCashflowPurchaseFields small,.work-cashflow-form #workCashflowPurchaseFields small{grid-column:span 2}form[onsubmit="workSaveCashflow(event)"]>.finance-button,.work-cashflow-form>.finance-button{grid-column:span 2}}
+
+/* Work events form: keep every field readable on desktop and mobile */
+.work-event-form{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:end}
+.work-event-field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.work-event-field label{font-size:11px;color:var(--dim);font-weight:700;letter-spacing:.25px}
+.work-event-field .finance-input{width:100%;box-sizing:border-box}
+.work-event-form>.finance-button{height:40px;white-space:nowrap}
+@media(max-width:700px){.work-event-form{grid-template-columns:1fr 1fr}.work-event-field:first-child,.work-event-field:nth-child(4){grid-column:span 2}.work-event-form>.finance-button{grid-column:span 2;width:100%}}
+
+/* Work purchases form: readable fields and no horizontal clipping */
+.work-purchase-form{display:grid!important;grid-template-columns:minmax(180px,1.7fr) minmax(120px,1fr) minmax(150px,1.2fr) minmax(130px,1fr) auto;gap:10px;align-items:end}
+.work-purchase-field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.work-purchase-field label{font-size:11px;color:var(--dim);font-weight:700;letter-spacing:.25px}
+.work-purchase-field .finance-input{width:100%;box-sizing:border-box}
+.work-purchase-form>.finance-button{height:40px;white-space:nowrap}
+@media(max-width:700px){.work-purchase-form{grid-template-columns:1fr 1fr}.work-purchase-field:first-child{grid-column:span 2}.work-purchase-form>.finance-button{grid-column:span 2;width:100%}}
+
+/* Work location picker */
+.work-place-picker{position:fixed;inset:0;z-index:260;display:none;place-items:center;padding:20px;background:rgba(3,5,12,.72);backdrop-filter:blur(10px)}
+.work-place-picker.show{display:grid}.work-place-card{width:min(430px,100%);padding:20px;border:1px solid rgba(139,156,255,.3);border-radius:18px;background:linear-gradient(145deg,#11152a,#0b0d18);box-shadow:0 18px 60px rgba(0,0,0,.4)}
+.work-place-card h2{margin:0 0 5px;font-size:20px}.work-place-card p{margin:0 0 15px;color:var(--dim);font-size:12px}.work-place-list{display:grid;gap:8px;margin-bottom:12px}.work-place-option{display:flex;align-items:center;gap:10px;width:100%;padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(255,255,255,.05);color:#fff;text-align:left;cursor:pointer}.work-place-option:hover{border-color:#8b9cff;background:rgba(139,156,255,.12)}.work-place-option-main{display:flex;align-items:center;gap:10px;flex:1;min-width:0;text-align:left}.work-place-option-main strong{font-size:13px}.work-place-option-main small{display:block;color:var(--dim);margin-top:3px}.work-place-delete{border:0;border-radius:8px;background:rgba(255,100,120,.12);color:#ff9aa8;padding:7px 9px;cursor:pointer}.work-place-delete:hover{background:rgba(255,100,120,.25)}.work-place-actions{display:flex;gap:8px}.work-place-actions .finance-button{flex:1}
+
+/* Finance workspace polish */
+.finance-workspace{font-family:Inter,'Segoe UI',sans-serif;background:linear-gradient(145deg,#071014 0%,#080b12 48%,#0d111c 100%)}
+.finance-head{padding:18px clamp(16px,4vw,42px);box-shadow:0 1px 0 rgba(255,255,255,.05)}
+.finance-head-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:rgba(0,212,170,.14);border:1px solid rgba(0,212,170,.28);box-shadow:0 8px 26px rgba(0,212,170,.1)}
+.finance-head-title{font-size:17px;letter-spacing:.1px}.finance-head-sub{letter-spacing:.15px}
+.finance-close{transition:background .2s,transform .2s}.finance-close:hover{background:rgba(255,255,255,.15);transform:scale(1.04)}
+.finance-tabs{padding:12px clamp(14px,4vw,42px);background:rgba(6,9,15,.76);position:sticky;top:0;z-index:2}
+.finance-tab{font-weight:600;letter-spacing:.1px;transition:all .2s}.finance-tab:hover{color:#fff;border-color:rgba(0,212,170,.45)}
+.finance-body{max-width:920px;padding:24px clamp(14px,4vw,42px) 34px}
+.finance-pane{animation:financePaneIn .22s ease-out}@keyframes financePaneIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.finance-section-heading{margin:0 0 14px}.finance-section-heading h2{font-size:20px;margin:0 0 5px;letter-spacing:-.25px}.finance-section-heading p{margin:0;color:var(--dim);font-size:12px;line-height:1.5}
+.finance-grid{gap:12px}.finance-card{background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.035));border-color:rgba(255,255,255,.12);box-shadow:0 8px 24px rgba(0,0,0,.12);transition:transform .2s,border-color .2s}.finance-card:hover{transform:translateY(-2px);border-color:rgba(0,212,170,.28)}
+.finance-card-label{text-transform:uppercase;letter-spacing:.8px;font-weight:700}.finance-card-value{letter-spacing:-.2px}.finance-row{border:1px solid rgba(255,255,255,.08);transition:background .2s,border-color .2s}.finance-row:hover{background:rgba(0,212,170,.07);border-color:rgba(0,212,170,.24)}.finance-row-actions{display:flex;gap:5px;flex-wrap:wrap}.finance-row-actions .finance-button,.finance-row-amount .finance-button{padding:6px 8px;font-size:10px}
+.finance-form{margin-top:4px}.finance-input{outline:none;transition:border-color .2s,box-shadow .2s}.finance-input:focus{border-color:rgba(0,212,170,.65);box-shadow:0 0 0 3px rgba(0,212,170,.1)}.finance-button{transition:filter .2s,transform .2s}.finance-button:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.finance-chat{margin-top:24px;padding:16px;border:1px solid rgba(255,255,255,.1);border-radius:16px;background:rgba(0,0,0,.16)}.finance-chat-title{letter-spacing:.1px}.finance-chat-log{min-height:42px}.finance-chat-msg{box-shadow:0 3px 10px rgba(0,0,0,.1)}
+
+/* Dedicated work workspace reuses the finance layout system */
+.work-workspace{--work-accent:#8b9cff;position:fixed;inset:0;z-index:240;display:none;flex-direction:column;background:linear-gradient(145deg,#0b0d18 0%,#0a0c14 48%,#111426 100%);color:var(--text);overflow:hidden;font-family:Inter,'Segoe UI',sans-serif}
+.work-workspace.show{display:flex}.work-workspace .finance-head-icon{background:rgba(139,156,255,.14);border-color:rgba(139,156,255,.3)}.work-workspace .finance-tab.active{background:var(--work-accent);border-color:var(--work-accent);color:#080b18}.work-workspace .finance-button{background:var(--work-accent);color:#080b18}.work-workspace .finance-input:focus{border-color:rgba(139,156,255,.7);box-shadow:0 0 0 3px rgba(139,156,255,.1)}.work-workspace .finance-row:hover{background:rgba(139,156,255,.08);border-color:rgba(139,156,255,.28)}
+.project-workspace{--project-accent:#c084fc;position:fixed;inset:0;z-index:240;display:none;flex-direction:column;background:linear-gradient(145deg,#120b1b 0%,#0d0a14 48%,#181022 100%);color:var(--text);overflow:hidden;font-family:Inter,'Segoe UI',sans-serif}
+.project-workspace.show{display:flex}.project-workspace .finance-head-icon{background:rgba(192,132,252,.14);border-color:rgba(192,132,252,.3)}.project-workspace .finance-tab.active{background:var(--project-accent);border-color:var(--project-accent);color:#12091a}.project-workspace .finance-button{background:var(--project-accent);color:#12091a}.project-workspace .finance-input:focus{border-color:rgba(192,132,252,.7);box-shadow:0 0 0 3px rgba(192,132,252,.1)}.project-workspace .finance-row:hover{background:rgba(192,132,252,.08);border-color:rgba(192,132,252,.28)}
+.project-workspace .finance-head{padding:18px clamp(16px,4vw,42px);background:rgba(13,10,20,.9);box-shadow:0 1px 0 rgba(192,132,252,.12)}
+.project-workspace .finance-head-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;box-shadow:0 8px 26px rgba(192,132,252,.12)}
+.project-workspace .finance-tabs{padding:12px clamp(14px,4vw,42px);background:rgba(10,8,16,.78);position:sticky;top:0;z-index:2}
+.project-workspace .finance-tab{font-weight:650;letter-spacing:.1px;transition:all .2s}.project-workspace .finance-tab:hover{color:#fff;border-color:rgba(192,132,252,.55)}
+.project-workspace .finance-body{max-width:920px;padding:24px clamp(14px,4vw,42px) 34px}.project-workspace .finance-card{background:linear-gradient(145deg,rgba(255,255,255,.08),rgba(255,255,255,.035));border-color:rgba(192,132,252,.16);box-shadow:0 8px 24px rgba(0,0,0,.18);transition:transform .2s,border-color .2s}.project-workspace .finance-card:hover{transform:translateY(-2px);border-color:rgba(192,132,252,.42)}
+.project-workspace .finance-card-label{text-transform:uppercase;letter-spacing:.8px;font-weight:700}.project-workspace .finance-card-value{letter-spacing:-.2px}.project-workspace .finance-chat{background:rgba(0,0,0,.2);border-color:rgba(192,132,252,.16)}.project-workspace .finance-chat-msg.user{background:rgba(192,132,252,.18)}
 
 /* Quick Action + Kategori icon colors — unified white */
-#grpQuick .cat-item .cat-em,
+#grpCore .cat-item .cat-em,
 #grpKategori .cat-item .cat-em {
   background: rgba(255,255,255,0.08);
   box-shadow: 0 0 10px rgba(255,255,255,0.1);
 }
-#grpQuick .cat-item .cat-em svg,
+#grpCore .cat-item .cat-em svg,
 #grpKategori .cat-item .cat-em svg {
   stroke: #fff;
 }
@@ -1456,10 +1557,10 @@ oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
 
 <!-- Fitur Kategori (pojok kiri bawah) -->
 <div class="cat-panel hidden-initial" id="catPanel">
-  <div class="cat-group" id="grpQuick">
-    <div class="cat-group-header" onclick="toggleGroup('grpQuick')">
+  <div class="cat-group" id="grpCore">
+    <div class="cat-group-header" onclick="toggleGroup('grpCore')">
       <span class="cat-group-icon">⚡</span>
-      <span class="cat-group-label">Quick Action</span>
+      <span class="cat-group-label">Sistem & Adaptia</span>
       <span class="cat-group-arrow">▶</span>
     </div>
     <div class="cat-group-items">
@@ -1475,6 +1576,41 @@ oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
       <div class="cat-item" onclick="open3Area()"><div class="cat-em"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="4"/></svg></div><div class="cat-name"><span class="cat-label">3 Area</span><span class="cat-count">Otak · Tubuh · Jiwa</span></div></div>
     </div>
   </div>
+  <div class="cat-group" id="grpFinance">
+    <div class="cat-group-header" onclick="openFinanceWorkspace()">
+      <span class="cat-group-icon">💰</span>
+      <span class="cat-group-label">Keuangan</span>
+      <span class="cat-group-arrow">▶</span>
+    </div>
+    <div class="cat-group-items">
+      <div class="cat-item" onclick="quickSend('buat ringkasan keuangan bulan ini')"><div class="cat-em"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00d4aa" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M4 19h16"/><path d="m7 15 3-4 3 2 5-7"/></svg></div><div class="cat-name"><span class="cat-label">Ringkasan</span><span class="cat-count">Cashflow & kategori</span></div></div>
+      <div class="cat-item" onclick="quickSend('analisis kondisi keuangan saya')"><div class="cat-em"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00d4aa" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg></div><div class="cat-name"><span class="cat-label">Analisis</span><span class="cat-count">Pola, risiko & temuan</span></div></div>
+      <div class="cat-item" onclick="quickSend('bantu buat budget bulanan yang realistis')"><div class="cat-em"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00d4aa" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h6M7 16h3"/></svg></div><div class="cat-name"><span class="cat-label">Budget</span><span class="cat-count">Rencana pengeluaran</span></div></div>
+      <div class="cat-item" onclick="quickSend('jelaskan risiko trading dan position sizing')"><div class="cat-em"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00d4aa" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17 10 11l4 4 6-8"/><path d="M16 7h4v4"/></svg></div><div class="cat-name"><span class="cat-label">Trading</span><span class="cat-count">Risiko & strategi</span></div></div>
+      <div class="cat-item" onclick="quickSend('cari informasi keuangan terbaru dari sumber resmi')"><div class="cat-em"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00d4aa" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></div><div class="cat-name"><span class="cat-label">Riset</span><span class="cat-count">Sumber resmi terbaru</span></div></div>
+    </div>
+  </div>
+  <div class="cat-group" id="grpWork">
+    <div class="cat-group-header" onclick="openWorkPlacePicker()">
+      <span class="cat-group-icon">💼</span>
+      <span class="cat-group-label">Pekerjaan</span>
+      <span class="cat-group-arrow">▶</span>
+    </div>
+    <div class="cat-group-items">
+      <div class="cat-item" onclick="openWorkPlacePicker()"><div class="cat-em"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b9cff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 4V2h8v2M7 9h10M7 13h6"/></svg></div><div class="cat-name"><span class="cat-label">Workspace</span><span class="cat-count">Pilih tempat kerja</span></div></div>
+    </div>
+  </div>
+  <div class="cat-group" id="grpProject">
+    <div class="cat-group-header" onclick="openProjectWorkspace()">
+      <span class="cat-group-icon">🚀</span>
+      <span class="cat-group-label">Project</span>
+      <span class="cat-group-arrow">▶</span>
+    </div>
+    <div class="cat-group-items">
+      <div class="cat-item" onclick="openProjectWorkspace('overview')"><div class="cat-em"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h6l2 2h8v10H4z"/><path d="M4 7V5h6l2 2"/></svg></div><div class="cat-name"><span class="cat-label">Project Aktif</span><span class="cat-count">Status Adaptia</span></div></div>
+      <div class="cat-item" onclick="openProjectWorkspace('build')"><div class="cat-em"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/><path d="m14 4-4 16"/></svg></div><div class="cat-name"><span class="cat-label">Build Adaptia</span><span class="cat-count">Buka build workspace</span></div></div>
+    </div>
+  </div>
   <div class="cat-group" id="grpKategori">
     <div class="cat-group-header" onclick="toggleGroup('grpKategori')">
       <span class="cat-group-icon">📂</span>
@@ -1482,7 +1618,7 @@ oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
       <span class="cat-group-arrow">▶</span>
     </div>
     <div class="cat-group-items">
-  <div class="cat-item" onclick="selectCategory('pekerjaan')"><div class="cat-em"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg></div><div class="cat-name"><span class="cat-label">Pekerjaan</span><span class="cat-count">Tugas & target</span></div></div>
+  <div class="cat-item" onclick="openWorkPlacePicker()"><div class="cat-em"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg></div><div class="cat-name"><span class="cat-label">Pekerjaan</span><span class="cat-count">Pilih tempat kerja</span></div></div>
   <div class="cat-item" onclick="selectCategory('skill')"><div class="cat-em"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></div><div class="cat-name"><span class="cat-label">Skill</span><span class="cat-count">Kemampuan & upgrade</span></div></div>
   <div class="cat-item" onclick="selectCategory('project')"><div class="cat-em"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path></svg></div><div class="cat-name"><span class="cat-label">Project</span><span class="cat-count">Proyek aktif</span></div></div>
   <div class="cat-item" onclick="openMemoryJournal()"><div class="cat-em"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 0-3.5 2 4 4 0 0 0-2 .55A4 4 0 0 0 4 8.5 4 4 0 0 0 3 12a4 4 0 0 0 1 2.5A4 4 0 0 0 4.5 18 4 4 0 0 0 8 20.5 4 4 0 0 0 12 22a4 4 0 0 0 4-1.5A4 4 0 0 0 19.5 18 4 4 0 0 0 20 14.5a4 4 0 0 0 1-2.5 4 4 0 0 0-1-3.5A4 4 0 0 0 19.5 6 4 4 0 0 0 16 4.5 4 4 0 0 0 15.5 4 4 4 0 0 0 12 2z"></path></svg></div><div class="cat-name"><span class="cat-label">Memory</span><span class="cat-count">Journal otak</span></div></div>
@@ -1536,11 +1672,90 @@ oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
   </div>
 </div>
 
+<!-- Dedicated Finance Workspace -->
+<div class="finance-workspace" id="financeWorkspace" aria-label="Workspace Keuangan">
+  <div class="finance-head">
+    <span class="finance-head-icon">💰</span>
+    <div class="finance-head-title">Workspace Keuangan<span class="finance-head-sub">Data, analisis, trading, dan riset finansial</span></div>
+    <button class="finance-close" onclick="closeFinanceWorkspace()" aria-label="Tutup">✕</button>
+  </div>
+  <div class="finance-tabs" role="tablist">
+    <button class="finance-tab active" data-finance-tab="overview" onclick="financeTab('overview')">Ringkasan</button>
+    <button class="finance-tab" data-finance-tab="transactions" onclick="financeTab('transactions')">Transaksi</button>
+    <button class="finance-tab" data-finance-tab="budget" onclick="financeTab('budget')">Budget</button>
+    <button class="finance-tab" data-finance-tab="trading" onclick="financeTab('trading')">Trading</button>
+    <button class="finance-tab" data-finance-tab="research" onclick="financeTab('research')">Riset</button>
+  </div>
+  <div class="finance-body">
+    <section class="finance-pane active" id="financePaneOverview"><div class="finance-section-heading"><h2>Ringkasan keuangan</h2><p>Gambaran cashflow dan temuan utama dari data yang sudah tercatat.</p></div><div id="financeOverviewContent"><div class="finance-muted">Memuat ringkasan...</div></div></section>
+    <section class="finance-pane" id="financePaneTransactions"><div class="finance-section-heading"><h2>Transaksi</h2><p>Riwayat pemasukan dan pengeluaran yang menjadi dasar analisis.</p></div><div id="financeTransactionsContent"><div class="finance-muted">Memuat transaksi...</div></div></section>
+    <section class="finance-pane" id="financePaneBudget"><div class="finance-section-heading"><h2>Budget</h2><p>Batas pengeluaran dan rencana finansial per kategori.</p></div><div id="financeBudgetContent"><div class="finance-muted">Memuat budget...</div></div></section>
+    <section class="finance-pane" id="financePaneTrading"><div class="finance-section-heading"><h2>Trading</h2><p>Profil risiko dan kerangka pengambilan keputusan yang disiplin.</p></div><div id="financeTradingContent"><div class="finance-muted">Memuat profil risiko...</div></div></section>
+    <section class="finance-pane" id="financePaneResearch">
+      <div class="finance-section-heading"><h2>Riset finansial</h2><p>Cari informasi terbaru dari sumber yang tersedia, lalu verifikasi sebelum mengambil keputusan.</p></div>
+      <form class="finance-form" onsubmit="financeResearch(event)"><input class="finance-input" id="financeResearchInput" placeholder="Cari saham, ekonomi, pajak..." autocomplete="off"><button class="finance-button">Cari</button></form>
+      <div id="financeResearchContent"><div class="finance-muted">Riset memakai sumber finansial terbaru yang tersedia.</div></div>
+    </section>
+    <div class="finance-chat">
+      <div class="finance-chat-title">💬 Tanya Adaptia soal keuangan</div>
+      <div class="finance-chat-log" id="financeChatLog"><div class="finance-chat-msg bot">Siap. Tanya apa pun soal keuangan, transaksi, budget, investasi, atau trading.</div></div>
+      <form class="finance-form" onsubmit="financeAsk(event)"><input class="finance-input" id="financeChatInput" placeholder="Contoh: kondisi keuangan saya gimana?" autocomplete="off"><button class="finance-button">Kirim</button></form>
+    </div>
+  </div>
+</div>
+
+<!-- Dedicated Work Workspace -->
+<div class="work-place-picker" id="workPlacePicker" aria-hidden="true"><div class="work-place-card"><h2>Pilih tempat pekerjaan</h2><p>Pilih workspace berdasarkan lokasi atau tambahkan tempat kerja baru.</p><div class="work-place-list" id="workPlaceList"></div><div class="work-place-actions"><button type="button" class="finance-button" onclick="workAddPlace()">＋ Tambah tempat kerja</button><button type="button" class="finance-close" onclick="closeWorkPlacePicker()" aria-label="Tutup">✕</button></div></div></div>
+<div class="work-workspace" id="workWorkspace" aria-label="Workspace Pekerjaan">
+  <div class="finance-head">
+    <span class="finance-head-icon">💼</span>
+    <div class="finance-head-title">Workspace Pekerjaan<span class="finance-head-sub" id="workWorkspacePlace">MDC Bekasi · Tugas harian, target, belanja, dan agenda kerja</span></div>
+    <button class="finance-close" onclick="closeWorkWorkspace()" aria-label="Tutup">✕</button>
+  </div>
+  <div class="finance-tabs" role="tablist">
+    <button class="finance-tab active" data-work-tab="cashflow" onclick="workTab('cashflow')">Uang</button>
+    <button class="finance-tab" data-work-tab="purchases" onclick="workTab('purchases')">Belanja</button>
+    <button class="finance-tab" data-work-tab="events" onclick="workTab('events')">Acara</button>
+  </div>
+  <div class="finance-body">
+    <section class="finance-pane active" id="workPaneCashflow"><div class="finance-section-heading"><h2>Uang masuk & keluar</h2><p>Catat pemasukan dan pengeluaran kerja. Belanja otomatis masuk ke tab Belanja.</p></div><div id="workCashflowSummary" class="finance-grid" style="margin-bottom:12px"></div><form class="finance-form" onsubmit="workSaveCashflow(event)" style="flex-wrap:wrap"><select class="finance-input" id="workCashflowType" onchange="workToggleCashflowPurchase()"><option value="income">Uang masuk</option><option value="expense">Uang keluar</option></select><input class="finance-input" id="workCashflowNote" placeholder="Keterangan, contoh: Pembelian kopi merek X" required><input class="finance-input" id="workCashflowAmount" type="number" min="1" placeholder="Nominal" required><span id="workCashflowPurchaseFields" style="display:none;flex:1;min-width:220px;gap:8px"><select class="finance-input" id="workCashflowPurchaseUnit" onchange="workUpdateCashflowUnitPrice()"><option value="satuan">Beli satuan</option><option value="pack">Beli pack/renceng</option></select><input class="finance-input" id="workCashflowPurchaseQuantity" type="number" min="2" placeholder="Isi pack" oninput="workUpdateCashflowUnitPrice()"><small id="workCashflowUnitPreview" class="finance-muted">Harga satuan: —</small></span><button class="finance-button">Simpan</button></form><div id="workCashflowContent"><div class="finance-muted">Memuat arus kas...</div></div></section>
+    <section class="finance-pane" id="workPanePurchases"><div class="finance-section-heading"><h2>Log belanja kerja</h2><p>Simpan harga per satuan atau per pack, lengkap dengan jumlahnya.</p></div><form class="finance-form work-purchase-form" onsubmit="workSavePurchase(event)"><div class="work-purchase-field"><label for="workPurchaseItem">Nama barang</label><input class="finance-input" id="workPurchaseItem" placeholder="Contoh: Kopi susu" required></div><div class="work-purchase-field"><label for="workPurchasePrice">Harga total</label><input class="finance-input" id="workPurchasePrice" type="number" min="1" placeholder="Contoh: 17000" required oninput="workUpdateUnitPrice()"></div><div class="work-purchase-field"><label for="workPurchaseUnit">Jenis harga</label><select class="finance-input" id="workPurchaseUnit" onchange="workUpdateUnitPrice()"><option value="satuan">Harga satuan</option><option value="pack">Harga pack/renceng</option></select></div><div class="work-purchase-field"><label for="workPurchaseQuantity">Isi pack</label><input class="finance-input" id="workPurchaseQuantity" type="number" min="2" value="" placeholder="Contoh: 10" required oninput="workUpdateUnitPrice()"></div><button class="finance-button">Simpan belanja</button></form><div id="workUnitPricePreview" class="finance-muted" style="margin:-4px 0 12px">Pilih jenis harga dan isi jumlah pack.</div><div id="workPurchasesContent"><div class="finance-muted">Memuat log belanja...</div></div></section>
+    <section class="finance-pane" id="workPaneEvents"><div class="finance-section-heading"><h2>Agenda & pengingat</h2><p>Simpan jadwal acara kerja dan dapatkan pengingat sebelum waktunya.</p></div><form class="finance-form work-event-form" onsubmit="workSaveEvent(event)"><div class="work-event-field"><label for="workEventTitle">Nama acara</label><input class="finance-input" id="workEventTitle" placeholder="Contoh: Meeting klien" required></div><div class="work-event-field"><label for="workEventTime">Tanggal & waktu acara</label><input class="finance-input" id="workEventTime" type="datetime-local" required></div><div class="work-event-field"><label for="workEventLocation">Lokasi</label><input class="finance-input" id="workEventLocation" placeholder="Opsional"></div><div class="work-event-field"><label for="workEventNote">Catatan</label><input class="finance-input" id="workEventNote" placeholder="Hal yang perlu dicatat (opsional)"></div><div class="work-event-field"><label for="workEventReminder">Pengingat</label><select class="finance-input" id="workEventReminder"><option value="15">15 menit sebelumnya</option><option value="60" selected>1 jam sebelumnya</option><option value="1440">1 hari sebelumnya</option></select></div><button class="finance-button">Simpan acara</button></form><div id="workEventsContent"><div class="finance-muted">Memuat agenda...</div></div></section>
+    <div class="finance-chat">
+      <div class="finance-chat-title">💬 Tanya Adaptia soal pekerjaan</div>
+      <div class="finance-chat-log" id="workChatLog"><div class="finance-chat-msg bot">Siap bantu ngatur tugas, target, project, prioritas, dan progres kerja lu.</div></div>
+      <form class="finance-form" onsubmit="workAsk(event)"><input class="finance-input" id="workChatInput" placeholder="Contoh: apa yang harus gw kerjakan dulu?" autocomplete="off"><button class="finance-button">Kirim</button></form>
+    </div>
+  </div>
+</div>
+
+<!-- Dedicated Adaptia Project Workspace -->
+<div class="project-workspace" id="projectWorkspace" aria-label="Workspace Project Adaptia">
+  <div class="finance-head">
+    <span class="finance-head-icon">🚀</span>
+    <div class="finance-head-title">Project Adaptia<span class="finance-head-sub">Build, tuning, upgrade, dan kontrol perubahan</span></div>
+    <button class="finance-close" onclick="closeProjectWorkspace()" aria-label="Tutup">✕</button>
+  </div>
+  <div class="finance-tabs" role="tablist">
+    <button class="finance-tab active" data-project-tab="overview" onclick="projectTab('overview')">Status</button>
+    <button class="finance-tab" data-project-tab="build" onclick="projectTab('build')">Build</button>
+    <button class="finance-tab" data-project-tab="tuning" onclick="projectTab('tuning')">Tuning</button>
+    <button class="finance-tab" data-project-tab="upgrade" onclick="projectTab('upgrade')">Upgrade</button>
+  </div>
+  <div class="finance-body">
+    <section class="finance-pane active" id="projectPaneOverview"><div class="finance-section-heading"><h2>Status Project Adaptia</h2><p>Pusat kendali untuk melihat kondisi project dan membuka alur pengembangan.</p></div><div id="projectOverviewContent"><div class="finance-muted">Memuat status project...</div></div></section>
+    <section class="finance-pane" id="projectPaneBuild"><div class="finance-section-heading"><h2>Build</h2><p>Buat atau edit project dengan preview perubahan sebelum diterapkan.</p></div><div class="finance-card"><div class="finance-card-value" style="font-size:16px">Build Workspace</div><div class="finance-muted" style="margin:7px 0 14px">Gunakan build overlay untuk memilih project, menulis instruksi, melihat file yang berubah, lalu melakukan apply.</div><button class="finance-button" onclick="openBuildOverlay()">Buka Build Workspace</button></div></section>
+    <section class="finance-pane" id="projectPaneTuning"><div class="finance-section-heading"><h2>Tuning Adaptia</h2><p>Rencanakan penyempurnaan persona, obrolan, voice, memori, dan UX.</p></div><div class="finance-grid"><div class="finance-card"><div class="finance-card-label">Area tuning</div><div class="finance-card-value" style="font-size:15px">Obrolan · Voice · Memori · UI</div></div><div class="finance-card"><div class="finance-card-label">Mode aman</div><div class="finance-card-value" style="font-size:15px">Preview sebelum apply</div></div></div><button class="finance-button" style="margin-top:12px" onclick="openProjectBuildPrompt('Audit dan tuning area Adaptia yang paling perlu ditingkatkan sekarang. Buat perubahan dalam mode edit dan tampilkan preview.')">Buka tuning preview</button></section>
+    <section class="finance-pane" id="projectPaneUpgrade"><div class="finance-section-heading"><h2>Upgrade Adaptia</h2><p>Gunakan alur preview untuk menyusun upgrade, dampak, risiko, dan langkah implementasinya.</p></div><div class="finance-card"><div class="finance-card-label">Alur upgrade</div><div class="finance-card-value" style="font-size:15px">Rencana → Preview → Review → Apply → Verifikasi</div><div class="finance-muted" style="margin-top:8px">Perubahan tidak diterapkan sebelum lu menekan Apply.</div></div><button class="finance-button" style="margin-top:12px" onclick="openProjectBuildPrompt('Susun upgrade Adaptia yang paling penting berikutnya dengan risiko, file yang terdampak, dan preview perubahan.')">Buka upgrade preview</button></section>
+    <div class="finance-chat"><div class="finance-chat-title">💬 Chat teknis dengan Adaptia</div><div class="finance-chat-log" id="projectChatLog"><div class="finance-chat-msg bot">Siap bantu bahas build, tuning, upgrade, bug, dan arsitektur Adaptia.</div></div><form class="finance-form" onsubmit="projectAsk(event)"><input class="finance-input" id="projectChatInput" placeholder="Contoh: tuning obrolan Adaptia biar lebih natural" autocomplete="off"><button class="finance-button">Kirim</button></form></div>
+  </div>
+</div>
+
 <script>
 // === AUTO-UPDATE + PWA: register SW untuk fullscreen, force-clear hanya saat versi berubah ===
 (function(){
   try {
-    var VER = 'adaptia-v2.311';
+    var VER = 'adaptia-v2.375';
     var saved = localStorage.getItem('adaptia-ver');
     if (saved && saved !== VER) {
       // Versi berubah -> clear cache & reload sekali (bukan tiap load)
@@ -1733,7 +1948,9 @@ let autoVoice = true;
 try { autoVoice = localStorage.getItem('adaptia_autoVoice') !== '0'; } catch(e) { autoVoice = true; }
 let isRecording = false;
 let recognition = null;
-let wakeModeOn = true;
+let lastVoiceConfidence = 1;
+// Mic background/wake listener OFF by default; mic hanya aktif setelah user menekan voice.
+let wakeModeOn = false;
 let wakeIsMobile = false;
 try{ wakeIsMobile = /Android/i.test(navigator.userAgent||''); }catch(e){ wakeIsMobile = false; }
 let wakeRec = null;
@@ -2206,17 +2423,50 @@ function detectSkillCommand(text) {
   return false;
 }
 
-function quickSend(text) { msgInput.value = text; sendBtn.disabled = false; sendMsg(); }
+function quickSend(text) { if(typeof catPanel !== 'undefined' && catPanel) catPanel.classList.remove('active'); msgInput.value = text; sendBtn.disabled = false; sendMsg(); }
 function showSuggestions(list){ try{ if(!Array.isArray(list)||!list.length) return; var box=document.getElementById('chat'); if(!box) return; var old=document.getElementById('sugRow'); if(old) old.remove(); var row=document.createElement('div'); row.id='sugRow'; row.className='msg-sugs'; row.style.cssText='display:flex;flex-wrap:wrap;gap:8px;padding:4px 14px 8px 52px;'; list.slice(0,3).forEach(function(sug){ var b=document.createElement('button'); b.className='quick-btn'; b.style.cssText='padding:7px 12px;border:1px solid rgba(255,255,255,.16);border-radius:16px;background:rgba(255,255,255,.07);color:var(--text);font-size:12px;cursor:pointer;'; b.textContent=sug; b.onclick=function(){ if(window.msgInput){ msgInput.value=sug; msgInput.focus(); } if(window.sendBtn) sendBtn.disabled=false; if(typeof sendMsg==='function') sendMsg(); }; row.appendChild(b); }); box.appendChild(row); box.scrollTop=box.scrollHeight; }catch(e){} }
 
 function formatText(text) {
-  return text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>').replace(/`(.*?)`/g,'<code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px">$1</code>').replace(/\n/g,'<br>');
+  const esc = function(value){ return String(value||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); };
+  const inline = function(value){
+    return esc(value)
+      .replace(/`([^`]+)`/g,'<code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px">$1</code>')
+      .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g,'<em>$1</em>')
+      .replace(/(https?:\/\/[^\s&]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>');
+  };
+  // Model kadang mengirim "1. satu 2. dua" dalam satu baris; pecah jadi list.
+  const normalized = String(text||'').replace(/\r\n?/g,'\n').replace(/\s+(?=\d+[.)]\s+)/g,'\n').replace(/\s+(?=[-*+]\s+)/g,'\n');
+  const lines = normalized.split('\n');
+  let html='', inList=false;
+  const closeList=function(){ if(inList){ html+='</div>'; inList=false; } };
+  lines.forEach(function(line){
+    const heading = line.match(/^\s*(#{1,3})\s+(.+?)\s*$/);
+    const quote = line.match(/^\s*>\s?(.*)$/);
+    if(heading){ closeList(); html+='<strong class="chat-heading">'+inline(heading[2])+'</strong>'; return; }
+    if(quote){ closeList(); html+='<span class="chat-quote">'+inline(quote[1])+'</span>'; return; }
+    if(/^\s*([-*_])(?:\s*\1){2,}\s*$/.test(line)){ closeList(); html+='<span class="chat-rule"></span>'; return; }
+    const ordered = line.match(/^\s*(\d+)[.)]\s+(.*)$/);
+    const bullet = line.match(/^\s*[-*+]\s+(.*)$/);
+    if(ordered || bullet){
+      if(!inList){ html+='<div class="chat-list">'; inList=true; }
+      const marker = ordered ? ordered[1]+'.' : '•';
+      const body = ordered ? ordered[2] : bullet[1];
+      const check = body.match(/^\[([ xX])\]\s+(.*)$/);
+      const renderedBody = check ? '<span class="chat-check">'+(check[1].toLowerCase()==='x'?'✓':'□')+'</span> '+inline(check[2]) : inline(body);
+      html+='<div class="chat-list-item"><span class="chat-list-marker">'+esc(marker)+'</span><span class="chat-list-body">'+renderedBody+'</span></div>';
+      return;
+    }
+    closeList();
+    if(!String(line).trim()){ html+='<span class="chat-spacer"></span>'; return; }
+    html+='<span class="chat-line">'+inline(line)+'</span>';
+  });
+  closeList();
+  return html;
 }
 
-function typewriterEffect(el, html, callback) {
-  const tmp = document.createElement('div');
-  tmp.innerHTML = html;
-  const fullText = tmp.textContent;
+function typewriterEffect(el, rawText, callback) {
+  const fullText = String(rawText||'').replace(/\r\n?/g,'\n').replace(/\s+(?=\d+[.)]\s+)/g,'\n').replace(/\s+(?=[-*+]\s+)/g,'\n');
   let i = 0;
   const jitter = function(){ return 8 + Math.floor(Math.random() * 20); };
   let speed = jitter();
@@ -2308,6 +2558,10 @@ function configTTS(utterance, text, voiceMode, ctx){
   const cfg = (_voiceFlags && _voiceFlags.ratePitch === false) ? {rate:1.0, pitch:1.1} : getTTSConfig(_lastMood, ctx);
   utterance.rate = voiceMode ? cfg.rate : Math.min(cfg.rate * 1.02, 1.12);
   utterance.pitch = cfg.pitch;
+  const spoken = cleanForTTS(text);
+  if(spoken.length > 280) utterance.rate = Math.max(0.86, utterance.rate * 0.94);
+  if(/[?]\s*$/.test(spoken)) utterance.pitch = Math.min(1.18, utterance.pitch + 0.02);
+  if(/[!]\s*$/.test(spoken)) utterance.pitch = Math.min(1.18, utterance.pitch + 0.01);
   if(_voiceFlags && _voiceFlags.childMode){
     utterance.rate = Math.min(1.5, (parseFloat(utterance.rate) || 1) * 1.06);
     utterance.pitch = Math.min(2, (parseFloat(utterance.pitch) || 1) * 1.25);
@@ -2320,6 +2574,12 @@ let ttsBusy = false;
 function cleanForTTS(t){
   try{
     t = String(t || '');
+    // Jangan bacakan isi kode/Markdown mentah; voice harus terdengar natural.
+    t = t.replace(/```[\s\S]*?```/g, ' contoh kode dilewati ');
+    t = t.replace(/`([^`]+)`/g, ' kode $1 ');
+    t = t.replace(/^\s{0,3}#{1,6}\s*/gm, '');
+    t = t.replace(/^\s*[-*+]\s+/gm, '. ');
+    t = t.replace(/^\s*\d+[.)]\s+/gm, '. ');
     t = t.replace(/https?:\/\/\S+/g, ' ').replace(/[#*`_~\[\]{}|<>]/g, ' ');
     t = t.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{2190}-\u{21FF}\u{FE0F}\u{1F900}-\u{1F9FF}\u{1FA70}-\u{1FAFF}]/gu, '');
     t = t.replace(/\b(gw|guw|gua)\b/gi, 'gue').replace(/\b(elu|eloe)\b/gi, 'elo').replace(/\blu\b/gi, 'lo');
@@ -2353,7 +2613,7 @@ function cleanForTTS(t){
     t = t.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
     t = t.replace(/\.{3,}/g, '.').replace(/!{2,}/g, '!').replace(/\?{2,}/g, '?').replace(/,{2,}/g, ',');
     t = t.replace(/\s+([.,!?])/g, '$1');
-    t = t.replace(/\s+/g, ' ').trim();
+    t = t.replace(/\s+/g, ' ').replace(/\.\s*\./g, '.').trim();
     return t;
   }catch(e){ return String(t || ''); }
 }
@@ -2426,6 +2686,10 @@ async function speakNeural(text, isVoiceMode, onDone, ctx){
     const cfg = (_voiceFlags && _voiceFlags.ratePitch === false) ? {rate:1.0, pitch:1.1} : getTTSConfig(_lastMood, ctx);
     let pitch = Math.max(0.95, Math.min(1.10, parseFloat(cfg.pitch) || 1.0));
     let rate = parseFloat(cfg.rate) || 1.0;
+    const spoken = cleanForTTS(text);
+    if(spoken.length > 280) rate = Math.max(0.86, rate * 0.94);
+    if(/[?]\s*$/.test(spoken)) pitch = Math.min(1.15, pitch + 0.02);
+    if(/[!]\s*$/.test(spoken)) pitch = Math.min(1.15, pitch + 0.01);
     if(_voiceFlags && _voiceFlags.childMode){
       pitch = Math.max(1.15, Math.min(1.38, pitch + 0.22));
       rate = Math.min(1.22, rate + 0.06);
@@ -2641,7 +2905,7 @@ function addMsg(text, sender) {
     row.innerHTML = '<div class="msg-av-sm">' + av + '</div><button class="msg-speaker" onclick="speakBotMsg(this)" title="Dengarkan"><svg width="14" height="14" viewBox="0 0 32 32" fill="none"><path d="M6 10v4a4 4 0 0 0 4 4h2l6 6V4l-6 6H10a4 4 0 0 0-4 4Z" fill="rgba(255,255,255,0.85)"/><path d="M22 10a8.5 8.5 0 0 1 0 12" stroke="rgba(255,255,255,0.7)" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg></button>';
     row.appendChild(contentEl);
     chat.appendChild(row);
-    typewriterEffect(contentEl, formatText(text), function() {
+    typewriterEffect(contentEl, text, function() {
       contentEl.innerHTML += time;
     });
   // Auto TTS — neural (edge-tts) kalau aktif, fallback speechSynthesis
@@ -3002,7 +3266,6 @@ function startListening() {
   const orb = document.getElementById('voiceOrb');
   const sub = document.getElementById('voiceSub');
   recognition.onstart = () => {
-    try{ wakeModeOn = true; }catch(e){}
     isRecording = true;
     orb.classList.add('listening');
     sub.textContent = 'Mendengarkan...'; vt.textContent = '...';
@@ -3010,7 +3273,12 @@ function startListening() {
   };
   recognition.onresult = (e) => {
     let t = '';
-    for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript;
+    let confidence = 1;
+    for (let i = 0; i < e.results.length; i++) {
+      t += e.results[i][0].transcript;
+      if(e.results[i].isFinal && typeof e.results[i][0].confidence === 'number') confidence = e.results[i][0].confidence;
+    }
+    lastVoiceConfidence = confidence;
     if(t && t.length > 0) clearVoiceIdle();
     vt.textContent = t || '...';
   };
@@ -3021,7 +3289,7 @@ function startListening() {
     updateWaveform(false);
     const txt = vt.textContent;
     if (txt && txt !== '...' && txt.length > 2) {
-      vt.textContent = 'Berpikir...';
+      vt.textContent = lastVoiceConfidence < 0.55 ? 'Memastikan ucapan...' : 'Berpikir...';
       sendVoiceMessage(txt);
     }
     if(wakeModeOn) scheduleWakeRestart();
@@ -3124,16 +3392,18 @@ async function sendVoiceMessage(text) {
   try {
     const res = await fetch('/api/chat', {
       method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({message: text, voice: true, history: chatHistory, memory: getMemoryPayload()})
+      body: JSON.stringify({message: text, voice: true, voiceConfidence: lastVoiceConfidence, history: chatHistory, memory: getMemoryPayload()})
     });
     const data = await res.json();
     if (data.mood) applyMoodState(data.mood);
-    vt.textContent = data.reply || '...';
+    vt.textContent = data.reply || 'Gue belum dapet jawaban yang jelas.';
     addMsg(text, 'user');
-    addMsg(data.reply, 'bot'); if(data.suggestions&&data.suggestions.length) showSuggestions(data.suggestions);
-    chatHistory.push({role:'assistant', text:data.reply});
-    learnFromMessage(data.reply, 'assistant');
-    if (data.audio) playTTS(data.audio, null, 'reply');
+    if(data.reply){
+      addMsg(data.reply, 'bot'); if(data.suggestions&&data.suggestions.length) showSuggestions(data.suggestions);
+      chatHistory.push({role:'assistant', text:data.reply});
+      learnFromMessage(data.reply, 'assistant');
+      if (data.audio) playTTS(data.audio, null, 'reply');
+    }
     else if (voiceModeActive && autoMicEnabled) voiceReListen();
   } catch { vt.textContent = 'Error, coba lagi'; }
 }
@@ -5285,6 +5555,133 @@ function detectAndOpenApp(text) {
 
 
 // ===== DASHBOARD =====
+var financeChatHistory = [];
+function financeEsc(v){ return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function financeMoney(v){ var n=Number(v)||0; return 'Rp' + n.toLocaleString('id-ID'); }
+async function financeFetch(path){ var res=await fetch(path,{credentials:'same-origin'}); var data={}; try{data=await res.json();}catch(e){} if(!res.ok) throw new Error(data.error || (res.status===401?'Login diperlukan untuk membuka data keuangan':'Gagal memuat data')); return data; }
+function openFinanceWorkspace(){
+  if(typeof catPanel!=='undefined' && catPanel) catPanel.classList.remove('active');
+  var el=document.getElementById('financeWorkspace'); if(!el) return;
+  el.classList.add('show'); financeTab('overview'); financeLoadOverview();
+}
+function closeFinanceWorkspace(){ var el=document.getElementById('financeWorkspace'); if(el) el.classList.remove('show'); }
+function financeTab(name){
+  document.querySelectorAll('.finance-tab').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-finance-tab')===name);});
+  document.querySelectorAll('.finance-pane').forEach(function(p){p.classList.remove('active');});
+  var pane=document.getElementById('financePane'+name.charAt(0).toUpperCase()+name.slice(1)); if(pane) pane.classList.add('active');
+  if(name==='overview') financeLoadOverview();
+  if(name==='transactions') financeLoadTransactions();
+  if(name==='budget') financeLoadBudget();
+  if(name==='trading') financeLoadTrading();
+}
+function financeError(id,e){ var el=document.getElementById(id); if(el) el.innerHTML='<div class="finance-card"><div class="finance-card-value finance-negative">Tidak bisa memuat data</div><div class="finance-muted">'+financeEsc(e.message)+'</div></div>'; }
+async function financeLoadOverview(){
+  var el=document.getElementById('financeOverviewContent'); if(!el) return; el.innerHTML='<div class="finance-muted">Memuat ringkasan...</div>';
+  try{ var d=await financeFetch('/api/finance/summary'); var s=d.summary||{}; var a=await financeFetch('/api/finance/analysis');
+    el.innerHTML='<div class="finance-grid">'+
+      '<div class="finance-card"><div class="finance-card-label">Pemasukan</div><div class="finance-card-value finance-positive">'+financeMoney(s.income)+'</div></div>'+
+      '<div class="finance-card"><div class="finance-card-label">Pengeluaran</div><div class="finance-card-value finance-negative">'+financeMoney(s.expense)+'</div></div>'+
+      '<div class="finance-card"><div class="finance-card-label">Net cashflow</div><div class="finance-card-value '+(Number(s.net)>=0?'finance-positive':'finance-negative')+'">'+financeMoney(s.net)+'</div></div>'+
+      '<div class="finance-card"><div class="finance-card-label">Transaksi</div><div class="finance-card-value">'+(s.transactions||0)+'</div></div></div>'+
+      '<div class="finance-card" style="margin-top:10px"><div class="finance-card-label">Temuan analisis</div><div class="finance-muted">'+financeEsc((a.findings&&a.findings[0]&&a.findings[0].text)||'Belum ada temuan. Tambahkan transaksi agar analisis makin akurat.')+'</div></div>';
+  }catch(e){financeError('financeOverviewContent',e);}
+}
+async function financeLoadTransactions(){
+  var el=document.getElementById('financeTransactionsContent'); if(!el) return; el.innerHTML='<div class="finance-muted">Memuat transaksi...</div>';
+  try{ var d=await financeFetch('/api/finance/transactions'); var rows=d.transactions||[]; el.innerHTML='<div class="finance-card" style="margin-bottom:10px"><div class="finance-card-label">Total transaksi tercatat</div><div class="finance-card-value">'+(d.total||0)+'</div></div>'+(rows.length?'<div class="finance-list">'+rows.slice(0,30).map(function(x){return '<div class="finance-row"><div class="finance-row-main"><div class="finance-row-title">'+financeEsc(x.note||'Tanpa catatan')+'</div><div class="finance-row-meta">'+financeEsc(x.category||'lainnya')+' · '+financeEsc(x.ts?new Date(x.ts).toLocaleDateString('id-ID'):'-')+'</div></div><div class="finance-row-amount '+(x.type==='income'?'finance-positive':'finance-negative')+'">'+(x.type==='income'?'+':'-')+financeMoney(x.amount)+'</div></div>';}).join('')+'</div>':'<div class="finance-card"><div class="finance-muted">Belum ada transaksi tercatat.</div></div>'); }catch(e){financeError('financeTransactionsContent',e);}
+}
+async function financeLoadBudget(){
+  var el=document.getElementById('financeBudgetContent'); if(!el) return; el.innerHTML='<div class="finance-muted">Memuat budget...</div>';
+  try{ var d=await financeFetch('/api/finance/budgets'); var keys=Object.keys(d||{}); el.innerHTML=keys.length?'<div class="finance-list">'+keys.map(function(k){return '<div class="finance-row"><div class="finance-row-main"><div class="finance-row-title">'+financeEsc(k)+'</div><div class="finance-row-meta">Batas pengeluaran</div></div><div class="finance-row-amount">'+financeMoney(d[k])+'</div></div>';}).join('')+'</div>':'<div class="finance-card"><div class="finance-card-value">Budget belum diatur</div><div class="finance-muted">Atur budget lewat chat: “buat budget makan 1500000”.</div></div>'; }catch(e){financeError('financeBudgetContent',e);}
+}
+async function financeLoadTrading(){
+  var el=document.getElementById('financeTradingContent'); if(!el) return; el.innerHTML='<div class="finance-muted">Memuat profil risiko...</div>';
+  try{ var d=await financeFetch('/api/trading/risk-profile'); el.innerHTML='<div class="finance-grid"><div class="finance-card"><div class="finance-card-label">Profil risiko</div><div class="finance-card-value">'+financeEsc(d.level||'unknown')+'</div></div><div class="finance-card"><div class="finance-card-label">Horizon</div><div class="finance-card-value">'+financeEsc(d.horizon||'unknown')+'</div></div><div class="finance-card"><div class="finance-card-label">Batas rugi</div><div class="finance-card-value">'+(d.maxLossPercent==null?'Belum diatur':financeEsc(d.maxLossPercent)+'%')+'</div></div></div><div class="finance-card" style="margin-top:10px"><div class="finance-muted">Workspace ini membantu analisis risiko, bukan eksekusi order atau jaminan profit.</div></div>'; }catch(e){financeError('financeTradingContent',e);}
+}
+async function financeResearch(e){ e.preventDefault(); var input=document.getElementById('financeResearchInput'), el=document.getElementById('financeResearchContent'), q=(input&&input.value||'').trim(); if(q.length<2) return; el.innerHTML='<div class="finance-muted">Mencari sumber terbaru...</div>'; try{var d=await financeFetch('/api/trading/research?q='+encodeURIComponent(q)); var src=d.sources||[]; el.innerHTML='<div class="finance-muted" style="margin-bottom:10px">Diperbarui '+financeEsc(new Date(d.retrievedAt||Date.now()).toLocaleString('id-ID'))+'</div>'+(src.length?'<div class="finance-list">'+src.map(function(s){return '<a class="finance-row" href="'+financeEsc(s.url||s.uri||'#')+'" target="_blank" rel="noopener" style="text-decoration:none;color:inherit"><div class="finance-row-main"><div class="finance-row-title">'+financeEsc(s.title||s.name||'Sumber')+'</div><div class="finance-row-meta">'+financeEsc(s.snippet||s.description||s.url||'Buka sumber')+'</div></div>↗</a>';}).join('')+'</div>':'<div class="finance-card"><div class="finance-muted">Sumber tidak ditemukan.</div></div>')+'<div class="finance-muted" style="margin-top:10px">'+financeEsc(d.disclaimer||'Verifikasi angka di sumber resmi sebelum mengambil keputusan.')+'</div>'; }catch(err){financeError('financeResearchContent',err);} }
+async function financeAsk(e){ e.preventDefault(); var input=document.getElementById('financeChatInput'), log=document.getElementById('financeChatLog'), text=(input&&input.value||'').trim(); if(!text) return; input.value=''; log.innerHTML+='<div class="finance-chat-msg user">'+financeEsc(text)+'</div><div class="finance-chat-msg bot" id="financeTyping">Menganalisis konteks keuangan...</div>'; log.scrollTop=log.scrollHeight; try{var prompt='[Workspace Keuangan] Jawab khusus tentang keuangan. Gunakan data transaksi/budget jika tersedia, pisahkan fakta, asumsi, dan inferensi. Jangan menjanjikan profit atau memberi perintah beli/jual. Pertanyaan user: '+text; financeChatHistory.push({role:'user',text:prompt}); var res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:prompt,history:financeChatHistory.slice(-10),memory:typeof getMemoryPayload==='function'?getMemoryPayload():[]})}); var d=await res.json(); var reply=d.reply||d.error||'Maaf, belum bisa menjawab sekarang.'; financeChatHistory.push({role:'assistant',text:reply}); var typing=document.getElementById('financeTyping'); if(typing) typing.outerHTML='<div class="finance-chat-msg bot">'+financeEsc(reply).replace(/\n/g,'<br>')+'</div>'; }catch(err){var t=document.getElementById('financeTyping'); if(t) t.textContent='Gagal: '+err.message;} log.scrollTop=log.scrollHeight; }
+
+var workChatHistory = [];
+function workLocalRead(key){try{var v=JSON.parse(localStorage.getItem(key)||'[]');return Array.isArray(v)?v:[];}catch(e){return[];}}
+function workLocalAdd(key,row){try{var rows=workLocalRead(key).filter(function(x){return !row||x.id!==row.id;});if(row)rows.unshift(row);localStorage.setItem(key,JSON.stringify(rows.slice(0,100)));}catch(e){}}
+function workMergeRows(serverRows,localRows,extra){var all=[];(serverRows||[]).concat(localRows||[],extra?[extra]:[]).forEach(function(x){if(x&&x.id&&!all.some(function(y){return y.id===x.id;}))all.push(x);});return all;}
+function workPlaces(){try{var rows=JSON.parse(localStorage.getItem('adaptia-work-places')||'null');if(!Array.isArray(rows)||!rows.length){rows=[{id:'mdc-bekasi',name:'MDC Bekasi'}];localStorage.setItem('adaptia-work-places',JSON.stringify(rows));}return rows;}catch(e){return[{id:'mdc-bekasi',name:'MDC Bekasi'}];}}
+function workCurrentPlace(){var rows=workPlaces(),id='';try{id=localStorage.getItem('adaptia-work-place')||'';}catch(e){}return rows.find(function(x){return x.id===id;})||rows[0];}
+function workRenderPlacePicker(){var el=document.getElementById('workPlaceList');if(!el)return;var rows=workPlaces(),current=workCurrentPlace();el.innerHTML=rows.map(function(x){return '<div class="work-place-option"><button type="button" class="work-place-option-main" style="border:0;background:transparent;color:inherit;cursor:pointer" onclick="selectWorkPlace(\''+financeEsc(x.id)+'\')"><span style="font-size:20px">📍</span><span><strong>'+financeEsc(x.name)+'</strong>'+(x.id===current.id?'<small>Sedang dipilih</small>':'')+'</span></button><button type="button" class="work-place-delete" onclick="deleteWorkPlace(\''+financeEsc(x.id)+'\')" aria-label="Hapus '+financeEsc(x.name)+'">Hapus</button></div>';}).join('');}
+function openWorkPlacePicker(){var el=document.getElementById('workPlacePicker');if(!el)return;workRenderPlacePicker();el.classList.add('show');el.setAttribute('aria-hidden','false');}
+function closeWorkPlacePicker(){var el=document.getElementById('workPlacePicker');if(el){el.classList.remove('show');el.setAttribute('aria-hidden','true');}}
+function selectWorkPlace(id){var place=workPlaces().find(function(x){return x.id===id;})||workCurrentPlace();try{localStorage.setItem('adaptia-work-place',place.id);}catch(e){}var label=document.getElementById('workWorkspacePlace');if(label)label.textContent=place.name+' · Tugas harian, target, belanja, dan agenda kerja';closeWorkPlacePicker();openWorkWorkspace();}
+function workAddPlace(){var name=prompt('Nama tempat pekerjaan baru');if(name===null)return;name=name.trim();if(!name)return;var rows=workPlaces();if(rows.some(function(x){return x.name.toLowerCase()===name.toLowerCase();})){alert('Tempat pekerjaan itu sudah ada.');return;}var id='place-'+Date.now();rows.push({id:id,name:name});try{localStorage.setItem('adaptia-work-places',JSON.stringify(rows));localStorage.setItem('adaptia-work-place',id);}catch(e){}var label=document.getElementById('workWorkspacePlace');if(label)label.textContent=name+' · Tugas harian, target, belanja, dan agenda kerja';closeWorkPlacePicker();openWorkWorkspace();}
+function deleteWorkPlace(id){var rows=workPlaces();if(rows.length<=1){alert('Minimal harus ada satu tempat pekerjaan.');return;}var place=rows.find(function(x){return x.id===id;});if(!place)return;if(!confirm('Hapus pilihan tempat kerja "'+place.name+'"?'))return;var next=rows.filter(function(x){return x.id!==id;});try{localStorage.setItem('adaptia-work-places',JSON.stringify(next));if((localStorage.getItem('adaptia-work-place')||'')===id)localStorage.setItem('adaptia-work-place',next[0].id);}catch(e){}workRenderPlacePicker();}
+function openWorkWorkspace(startTab){
+  if(typeof catPanel!=='undefined' && catPanel) catPanel.classList.remove('active');
+  var el=document.getElementById('workWorkspace'); if(!el) return;
+  var place=workCurrentPlace(),label=document.getElementById('workWorkspacePlace');if(label)label.textContent=place.name+' · Tugas harian, target, belanja, dan agenda kerja';
+  el.classList.add('show'); workTab(startTab||'cashflow');
+}
+function closeWorkWorkspace(){ var el=document.getElementById('workWorkspace'); if(el) el.classList.remove('show'); }
+function workTab(name){
+  document.querySelectorAll('[data-work-tab]').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-work-tab')===name);});
+  ['cashflow','purchases','events'].forEach(function(n){var p=document.getElementById('workPane'+n.charAt(0).toUpperCase()+n.slice(1));if(p)p.classList.toggle('active',n===name);});
+  if(name==='purchases') workLoadPurchases(); if(name==='events') workLoadEvents(); if(name==='cashflow') workLoadCashflow();
+}
+function workError(id,e){var el=document.getElementById(id);if(el)el.innerHTML='<div class="finance-card"><div class="finance-card-value finance-negative">Tidak bisa memuat data</div><div class="finance-muted">'+financeEsc(e.message)+'</div></div>';}
+async function workLoadData(){var r=await fetch('/api/dashboard',{credentials:'same-origin'});if(!r.ok)throw new Error('Dashboard pekerjaan belum tersedia');return await r.json();}
+async function workLoadOverview(){var el=document.getElementById('workOverviewContent');if(!el)return;el.innerHTML='<div class="finance-muted">Memuat ringkasan...</div>';try{var d=await workLoadData(),goals=(d.goals||[]).filter(function(g){return !g.done;});el.innerHTML='<div class="finance-grid"><div class="finance-card"><div class="finance-card-label">Target aktif</div><div class="finance-card-value">'+goals.length+'</div></div><div class="finance-card"><div class="finance-card-label">Fokus workspace</div><div class="finance-card-value" style="font-size:15px">Tugas harian</div></div></div><div class="finance-card" style="margin-top:12px"><div class="finance-card-label">Prioritas berikutnya</div><div class="finance-card-value" style="font-size:15px">'+financeEsc(goals[0]&&goals[0].text||'Belum ada target aktif')+'</div><div class="finance-muted" style="margin-top:6px">Gunakan chat di bawah untuk membuat rencana kerja.</div></div>';}catch(e){workError('workOverviewContent',e);}}
+async function workLoadTasks(){var el=document.getElementById('workTasksContent');if(!el)return;el.innerHTML='<div class="finance-muted">Memuat tugas...</div>';try{var d=await workLoadData(),rows=(d.goals||[]).map(function(g){return '<div class="finance-row"><div class="finance-row-main"><div class="finance-row-title">'+(g.done?'✅ ':'⬜ ')+financeEsc(g.text||'Target tanpa nama')+'</div><div class="finance-row-meta">'+(g.done?'Selesai':'Belum selesai')+'</div></div></div>';}).join('');el.innerHTML=rows?'<div class="finance-list">'+rows+'</div>':'<div class="finance-card"><div class="finance-muted">Belum ada target tersimpan.</div></div>';}catch(e){workError('workTasksContent',e);}}
+async function workLoadProjects(){var el=document.getElementById('workProjectsContent');if(!el)return;el.innerHTML='<div class="finance-muted">Memuat project...</div>';try{var d=await workLoadData(),rows=(d.projects||[]).map(function(p){return '<div class="finance-row"><div class="finance-row-main"><div class="finance-row-title">📁 '+financeEsc(p)+'</div><div class="finance-row-meta">Project aktif di memori Adaptia</div></div></div>';}).join('');el.innerHTML=rows?'<div class="finance-list">'+rows+'</div>':'<div class="finance-card"><div class="finance-muted">Belum ada project tersimpan.</div></div>';}catch(e){workError('workProjectsContent',e);}}
+async function workLoadPurchases(extra){var el=document.getElementById('workPurchasesContent');if(!el)return;el.innerHTML='<div class="finance-muted">Memuat log belanja...</div>';try{var d=await financeFetch('/api/work/purchases'),rows=workMergeRows(d.purchases,workLocalRead('adaptia-work-purchases'),extra);el.innerHTML=rows.length?'<div class="finance-list">'+rows.map(function(x){return '<div class="finance-row"><div class="finance-row-main"><div class="finance-row-title">☕ '+financeEsc(x.item)+'</div><div class="finance-row-meta">'+financeEsc(x.store||'Tanpa lokasi')+' · '+financeEsc(x.date?new Date(x.date).toLocaleDateString('id-ID'):'-')+'</div></div><div class="finance-row-amount">'+financeMoney(x.price)+'</div></div>';}).join('')+'</div>':'<div class="finance-card"><div class="finance-muted">Belum ada harga kopi atau makanan yang dicatat.</div></div>';}catch(e){var rows=workMergeRows([],workLocalRead('adaptia-work-purchases'),extra);if(rows.length){el.innerHTML='<div class="finance-list">'+rows.map(function(x){return '<div class="finance-row"><div class="finance-row-main"><div class="finance-row-title">☕ '+financeEsc(x.item)+'</div><div class="finance-row-meta">'+financeEsc(x.store||'Tanpa lokasi')+' · '+financeEsc(x.date?new Date(x.date).toLocaleDateString('id-ID'):'-')+'</div></div><div class="finance-row-amount">'+financeMoney(x.price)+'</div></div>';}).join('')+'</div>';}else financeError('workPurchasesContent',e);}}
+async function workLoadEvents(extra){var el=document.getElementById('workEventsContent');if(!el)return;el.innerHTML='<div class="finance-muted">Memuat agenda...</div>';try{var d=await financeFetch('/api/work/events'),rows=workMergeRows(d.events,workLocalRead('adaptia-work-events'),extra);el.innerHTML=rows.length?'<div class="finance-list">'+rows.map(function(x){return '<div class="finance-row"><div class="finance-row-main"><div class="finance-row-title">📅 '+financeEsc(x.title)+'</div><div class="finance-row-meta">'+financeEsc(new Date(x.startsAt).toLocaleString('id-ID'))+(x.location?' · '+financeEsc(x.location):'')+'</div></div><div class="finance-row-amount">-</div></div>';}).join('')+'</div>':'<div class="finance-card"><div class="finance-muted">Belum ada acara yang dijadwalkan.</div></div>';}catch(e){var rows=workMergeRows([],workLocalRead('adaptia-work-events'),extra);if(rows.length){el.innerHTML='<div class="finance-list">'+rows.map(function(x){return '<div class="finance-row"><div class="finance-row-main"><div class="finance-row-title">📅 '+financeEsc(x.title)+'</div><div class="finance-row-meta">'+financeEsc(new Date(x.startsAt).toLocaleString('id-ID'))+(x.location?' · '+financeEsc(x.location):'')+'</div></div><div class="finance-row-amount">-</div></div>';}).join('')+'</div>';}else financeError('workEventsContent',e);}}
+async function workSavePurchase(e){e.preventDefault();var item=document.getElementById('workPurchaseItem'),price=document.getElementById('workPurchasePrice');try{var res=await fetch('/api/work/purchases',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({item:item.value,price:price.value})});var d=await res.json();if(!res.ok)throw new Error(d.error||'Gagal menyimpan');workLocalAdd('adaptia-work-purchases',d.purchase);item.value='';price.value='';workLoadPurchases(d.purchase);}catch(err){alert(err.message);}}
+async function workSaveEvent(e){e.preventDefault();var title=document.getElementById('workEventTitle'),time=document.getElementById('workEventTime'),location=document.getElementById('workEventLocation'),note=document.getElementById('workEventNote'),rem=document.getElementById('workEventReminder');try{var res=await fetch('/api/work/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:title.value,startsAt:time.value,location:location.value,note:note?note.value:'',reminderMinutes:rem.value})});var d=await res.json();if(!res.ok)throw new Error(d.error||'Gagal menyimpan acara');workLocalAdd('adaptia-work-events',d.event);title.value='';time.value='';location.value='';if(note)note.value='';workLoadEvents(d.event);}catch(err){alert(err.message);}}
+var workPurchaseRows=[],workEventRows=[];
+function workLocalDelete(key,id){try{var rows=workLocalRead(key).filter(function(x){return x.id!==id;});localStorage.setItem(key,JSON.stringify(rows));var deleted=workLocalRead(key+'-deleted');if(deleted.indexOf(id)<0)deleted.push(id);localStorage.setItem(key+'-deleted',JSON.stringify(deleted));}catch(e){}}
+function workDeleted(key){try{var v=JSON.parse(localStorage.getItem(key+'-deleted')||'[]');return Array.isArray(v)?v:[];}catch(e){return[];}}
+function workUnitText(x){return x.unit==='pack'?'Pack':'Satuan';}
+function workRenderPurchases(rows){var el=document.getElementById('workPurchasesContent');if(!el)return;workPurchaseRows=rows||[];el.innerHTML=workPurchaseRows.length?'<div class="finance-list">'+workPurchaseRows.map(function(x){return '<div class="finance-row"><div class="finance-row-main"><div class="finance-row-title">☕ '+financeEsc(x.item)+'</div><div class="finance-row-meta">'+workUnitText(x)+' · jumlah '+(Number(x.quantity)||1)+' · '+financeEsc(x.date?new Date(x.date).toLocaleDateString('id-ID'):'-')+'</div></div><div class="finance-row-amount">'+financeMoney(x.price)+'</div><div class="finance-row-actions"><button type="button" class="finance-button" onclick="workEditPurchase(\''+financeEsc(x.id)+'\')">Edit</button><button type="button" class="finance-button" onclick="workDeletePurchase(\''+financeEsc(x.id)+'\')">Hapus</button></div></div>';}).join('')+'</div>':'<div class="finance-card"><div class="finance-muted">Belum ada belanja yang dicatat.</div></div>';}
+function workRenderEvents(rows){var el=document.getElementById('workEventsContent');if(!el)return;workEventRows=rows||[];el.innerHTML=workEventRows.length?'<div class="finance-list">'+workEventRows.map(function(x){return '<div class="finance-row"><div class="finance-row-main"><div class="finance-row-title">📅 '+financeEsc(x.title)+'</div><div class="finance-row-meta">'+financeEsc(new Date(x.startsAt).toLocaleString('id-ID'))+(x.location?' · '+financeEsc(x.location):'')+'</div>'+(x.note?'<div class="finance-row-meta">📝 '+financeEsc(x.note)+'</div>':'')+'</div><div class="finance-row-amount"><button type="button" class="finance-button" onclick="workEditEvent(\''+financeEsc(x.id)+'\')">Edit</button><button type="button" class="finance-button" onclick="workDeleteEvent(\''+financeEsc(x.id)+'\')">Hapus</button></div></div>';}).join('')+'</div>':'<div class="finance-card"><div class="finance-muted">Belum ada acara yang dijadwalkan.</div></div>';}
+async function workLoadPurchases(){var el=document.getElementById('workPurchasesContent');if(!el)return;try{var d=await financeFetch('/api/work/purchases'),deleted=workDeleted('adaptia-work-purchases'),rows=workMergeRows(d.purchases,workLocalRead('adaptia-work-purchases')).filter(function(x){return deleted.indexOf(x.id)<0;});workRenderPurchases(rows);}catch(e){workRenderPurchases(workLocalRead('adaptia-work-purchases').filter(function(x){return workDeleted('adaptia-work-purchases').indexOf(x.id)<0;}));}}
+async function workLoadEvents(){var el=document.getElementById('workEventsContent');if(!el)return;try{var d=await financeFetch('/api/work/events'),deleted=workDeleted('adaptia-work-events'),rows=workMergeRows(d.events,workLocalRead('adaptia-work-events')).filter(function(x){return deleted.indexOf(x.id)<0;});workRenderEvents(rows);}catch(e){workRenderEvents(workLocalRead('adaptia-work-events').filter(function(x){return workDeleted('adaptia-work-events').indexOf(x.id)<0;}));}}
+async function workSavePurchase(e){e.preventDefault();var item=document.getElementById('workPurchaseItem'),price=document.getElementById('workPurchasePrice'),unit=document.getElementById('workPurchaseUnit'),quantity=document.getElementById('workPurchaseQuantity');try{var res=await fetch('/api/work/purchases',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({item:item.value,price:price.value,unit:unit.value,quantity:quantity.value})}),d=await res.json();if(!res.ok)throw new Error(d.error||'Gagal menyimpan');workLocalAdd('adaptia-work-purchases',d.purchase);item.value='';price.value='';quantity.value='1';workLoadPurchases();}catch(err){alert(err.message);}}
+async function workEditPurchase(id){var x=workPurchaseRows.find(function(r){return r.id===id;});if(!x)return;var item=prompt('Nama item',x.item);if(item===null)return;var price=prompt('Harga',x.price);if(price===null)return;var unit=prompt('Ketik satuan atau pack',x.unit==='pack'?'pack':'satuan');if(unit===null)return;var quantity=prompt('Jumlah',x.quantity||1);if(quantity===null)return;var updated=Object.assign({},x,{item:item,price:Number(price),unit:unit==='pack'?'pack':'satuan',quantity:Number(quantity)||1,date:new Date().toISOString()});workLocalAdd('adaptia-work-purchases',updated);workRenderPurchases(workPurchaseRows.map(function(r){return r.id===id?updated:r;}));try{await fetch('/api/work/purchases',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(updated)});}catch(e){}}
+async function workDeletePurchase(id){if(!confirm('Hapus item belanja ini?'))return;workLocalDelete('adaptia-work-purchases',id);workRenderPurchases(workPurchaseRows.filter(function(r){return r.id!==id;}));try{await fetch('/api/work/purchases',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})});}catch(e){}}
+async function workEditEvent(id){var x=workEventRows.find(function(r){return r.id===id;});if(!x)return;var title=prompt('Nama acara',x.title);if(title===null)return;var startsAt=prompt('Waktu ISO, contoh 2030-01-01T10:00',x.startsAt);if(startsAt===null)return;var location=prompt('Lokasi',x.location||'');if(location===null)return;var note=prompt('Catatan acara',x.note||'');if(note===null)return;var updated=Object.assign({},x,{title:title,startsAt:startsAt,location:location,note:note});workLocalAdd('adaptia-work-events',updated);workRenderEvents(workEventRows.map(function(r){return r.id===id?updated:r;}));try{await fetch('/api/work/events',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(updated)});}catch(e){}}
+async function workDeleteEvent(id){if(!confirm('Hapus acara ini?'))return;workLocalDelete('adaptia-work-events',id);workRenderEvents(workEventRows.filter(function(r){return r.id!==id;}));try{await fetch('/api/work/events',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})});}catch(e){}}
+function workUpdateUnitPrice(){var price=Number((document.getElementById('workPurchasePrice')||{}).value)||0,unit=(document.getElementById('workPurchaseUnit')||{}).value||'satuan',rawQty=(document.getElementById('workPurchaseQuantity')||{}).value,qty=Number(rawQty)||0,el=document.getElementById('workUnitPricePreview');if(!el)return;if(unit==='pack'&&qty<2){el.textContent='Masukkan isi pack (contoh: 10) untuk menghitung harga satuan.';return;}var value=unit==='pack'&&price?Math.round(price/qty):price;el.textContent=value?'Harga satuan: '+financeMoney(value)+(unit==='pack'?' ('+financeMoney(price)+' ÷ '+qty+')':''):'Harga satuan: —';}
+function workRenderPurchases(rows){var el=document.getElementById('workPurchasesContent');if(!el)return;workPurchaseRows=rows||[];el.innerHTML=workPurchaseRows.length?'<div class="finance-list">'+workPurchaseRows.map(function(x){var unitPrice=x.unitPrice||((x.unit==='pack')?Math.round(Number(x.price||0)/(Number(x.quantity)||1)):Number(x.price||0));return '<div class="finance-row"><div class="finance-row-main"><div class="finance-row-title">☕ '+financeEsc(x.item)+'</div><div class="finance-row-meta">'+workUnitText(x)+' · jumlah '+(Number(x.quantity)||1)+' · harga satuan '+financeMoney(unitPrice)+' · '+financeEsc(x.date?new Date(x.date).toLocaleDateString('id-ID'):'-')+'</div></div><div class="finance-row-amount">'+financeMoney(x.price)+'</div><div class="finance-row-actions"><button type="button" class="finance-button" onclick="workEditPurchase(\''+financeEsc(x.id)+'\')">Edit</button><button type="button" class="finance-button" onclick="workDeletePurchase(\''+financeEsc(x.id)+'\')">Hapus</button></div></div>';}).join('')+'</div>':'<div class="finance-card"><div class="finance-muted">Belum ada belanja yang dicatat.</div></div>';}
+var workCashflowRows=[];
+function workCashflowFromPurchases(rows){return (rows||[]).filter(function(x){return !x.cashflowId;}).map(function(x){return {id:'purchase:'+x.id,type:'expense',note:'Belanja: '+x.item,amount:Number(x.price)||0,date:x.date,source:'purchase',purchaseId:x.id};});}
+function workRenderCashflow(rows){var el=document.getElementById('workCashflowContent'),sum=document.getElementById('workCashflowSummary');if(!el)return;workCashflowRows=rows||[];var income=workCashflowRows.filter(function(x){return x.type==='income';}).reduce(function(a,x){return a+(Number(x.amount)||0);},0),expense=workCashflowRows.filter(function(x){return x.type==='expense';}).reduce(function(a,x){return a+(Number(x.amount)||0);},0);if(sum)sum.innerHTML='<div class="finance-card"><div class="finance-card-label">Uang masuk</div><div class="finance-card-value finance-positive">'+financeMoney(income)+'</div></div><div class="finance-card"><div class="finance-card-label">Uang keluar</div><div class="finance-card-value finance-negative">'+financeMoney(expense)+'</div></div><div class="finance-card"><div class="finance-card-label">Saldo</div><div class="finance-card-value '+(income-expense>=0?'finance-positive':'finance-negative')+'">'+financeMoney(income-expense)+'</div></div>';el.innerHTML=workCashflowRows.length?'<div class="finance-list">'+workCashflowRows.map(function(x){return '<div class="finance-row"><div class="finance-row-main"><div class="finance-row-title">'+(x.type==='income'?'⬆️ ':'⬇️ ')+financeEsc(x.note)+'</div><div class="finance-row-meta">'+(x.source==='purchase'?'Otomatis dari belanja':'Manual')+' · '+financeEsc(x.date?new Date(x.date).toLocaleDateString('id-ID'):'-')+'</div></div><div class="finance-row-amount '+(x.type==='income'?'finance-positive':'finance-negative')+'">'+(x.type==='income'?'+':'-')+financeMoney(x.amount)+'</div>'+(x.source==='purchase'?'<button type="button" class="finance-button" onclick="workDeletePurchase(\''+financeEsc(x.purchaseId)+'\')">Hapus belanja</button>':'<button type="button" class="finance-button" onclick="workDeleteCashflow(\''+financeEsc(x.id)+'\')">Hapus</button>')+'</div>';}).join('')+'</div>':'<div class="finance-card"><div class="finance-muted">Belum ada transaksi uang.</div></div>';}
+async function workLoadCashflow(){try{var d=await financeFetch('/api/work/cashflow'),p=await financeFetch('/api/work/purchases'),manual=workMergeRows(d.cashflow,workLocalRead('adaptia-work-cashflow')).filter(function(x){return workDeleted('adaptia-work-cashflow').indexOf(x.id)<0;}),purchases=workMergeRows(p.purchases,workLocalRead('adaptia-work-purchases')).filter(function(x){return workDeleted('adaptia-work-purchases').indexOf(x.id)<0;});workRenderCashflow(manual.concat(workCashflowFromPurchases(purchases)));}catch(e){var manual=workLocalRead('adaptia-work-cashflow').filter(function(x){return workDeleted('adaptia-work-cashflow').indexOf(x.id)<0;}),purchases=workLocalRead('adaptia-work-purchases').filter(function(x){return workDeleted('adaptia-work-purchases').indexOf(x.id)<0;});workRenderCashflow(manual.concat(workCashflowFromPurchases(purchases)));}}
+async function workSaveCashflow(e){e.preventDefault();var type=document.getElementById('workCashflowType'),note=document.getElementById('workCashflowNote'),amount=document.getElementById('workCashflowAmount');try{var res=await fetch('/api/work/cashflow',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:type.value,note:note.value,amount:amount.value})}),d=await res.json();if(!res.ok)throw new Error(d.error||'Gagal menyimpan arus kas');workLocalAdd('adaptia-work-cashflow',d.entry);if(d.purchase)workLocalAdd('adaptia-work-purchases',d.purchase);note.value='';amount.value='';workLoadCashflow();}catch(err){alert(err.message);}}
+async function workDeleteCashflow(id){if(!confirm('Hapus transaksi uang ini?'))return;workLocalDelete('adaptia-work-cashflow',id);workLoadCashflow();try{await fetch('/api/work/cashflow',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id})});}catch(e){}}
+async function workSavePurchase(e){e.preventDefault();var item=document.getElementById('workPurchaseItem'),price=document.getElementById('workPurchasePrice'),unit=document.getElementById('workPurchaseUnit'),quantity=document.getElementById('workPurchaseQuantity');if(unit.value==='pack'&&Number(quantity.value)<2){alert('Isi jumlah unit di dalam pack dulu, contoh 10.');quantity.focus();return;}try{var res=await fetch('/api/work/purchases',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({item:item.value,price:price.value,unit:unit.value,quantity:quantity.value})}),d=await res.json();if(!res.ok)throw new Error(d.error||'Gagal menyimpan');workLocalAdd('adaptia-work-purchases',d.purchase);item.value='';price.value='';quantity.value='';workUpdateUnitPrice();workLoadPurchases();}catch(err){alert(err.message);}}
+function workToggleCashflowPurchase(){var type=document.getElementById('workCashflowType'),fields=document.getElementById('workCashflowPurchaseFields');if(fields)fields.style.display=type&&type.value==='expense'?'flex':'none';workUpdateCashflowUnitPrice();}
+function workUpdateCashflowUnitPrice(){var amount=Number((document.getElementById('workCashflowAmount')||{}).value)||0,unit=(document.getElementById('workCashflowPurchaseUnit')||{}).value||'satuan',qty=Number((document.getElementById('workCashflowPurchaseQuantity')||{}).value)||0,el=document.getElementById('workCashflowUnitPreview');if(!el)return;el.textContent=unit==='pack'?(qty>1&&amount?'Harga satuan: '+financeMoney(Math.round(amount/qty)):'Isi jumlah pack dulu'):(amount?'Harga satuan: '+financeMoney(amount):'Harga satuan: —');}
+async function workSaveCashflow(e){e.preventDefault();var type=document.getElementById('workCashflowType'),note=document.getElementById('workCashflowNote'),amount=document.getElementById('workCashflowAmount'),unit=document.getElementById('workCashflowPurchaseUnit'),quantity=document.getElementById('workCashflowPurchaseQuantity');if(type.value==='expense'&&unit.value==='pack'&&Number(quantity.value)<2){alert('Isi jumlah unit di dalam pack/renceng dulu.');quantity.focus();return;}try{var res=await fetch('/api/work/cashflow',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:type.value,note:note.value,amount:amount.value,purchaseUnit:unit.value,purchaseQuantity:quantity.value})}),d=await res.json();if(!res.ok)throw new Error(d.error||'Gagal menyimpan arus kas');workLocalAdd('adaptia-work-cashflow',d.entry);if(d.purchase)workLocalAdd('adaptia-work-purchases',d.purchase);note.value='';amount.value='';quantity.value='';workLoadCashflow();}catch(err){alert(err.message);}}
+function workScopeUrl(path){return path+'?workplaceId='+encodeURIComponent(workCurrentPlace().id);}
+function workScopedRows(rows){var id=workCurrentPlace().id;return (rows||[]).filter(function(x){return (x.workplaceId||'mdc-bekasi')===id;});}
+async function workLoadPurchases(){var el=document.getElementById('workPurchasesContent');if(!el)return;try{var d=await financeFetch(workScopeUrl('/api/work/purchases')),deleted=workDeleted('adaptia-work-purchases'),rows=workScopedRows(workMergeRows(d.purchases,workLocalRead('adaptia-work-purchases'))).filter(function(x){return deleted.indexOf(x.id)<0;});workRenderPurchases(rows);}catch(e){workRenderPurchases(workScopedRows(workLocalRead('adaptia-work-purchases')).filter(function(x){return workDeleted('adaptia-work-purchases').indexOf(x.id)<0;}));}}
+async function workLoadEvents(){var el=document.getElementById('workEventsContent');if(!el)return;try{var d=await financeFetch(workScopeUrl('/api/work/events')),deleted=workDeleted('adaptia-work-events'),rows=workScopedRows(workMergeRows(d.events,workLocalRead('adaptia-work-events'))).filter(function(x){return deleted.indexOf(x.id)<0;});workRenderEvents(rows);}catch(e){workRenderEvents(workScopedRows(workLocalRead('adaptia-work-events')).filter(function(x){return workDeleted('adaptia-work-events').indexOf(x.id)<0;}));}}
+async function workLoadCashflow(){try{var d=await financeFetch(workScopeUrl('/api/work/cashflow')),p=await financeFetch(workScopeUrl('/api/work/purchases')),manual=workScopedRows(workMergeRows(d.cashflow,workLocalRead('adaptia-work-cashflow'))).filter(function(x){return workDeleted('adaptia-work-cashflow').indexOf(x.id)<0;}),purchases=workScopedRows(workMergeRows(p.purchases,workLocalRead('adaptia-work-purchases'))).filter(function(x){return workDeleted('adaptia-work-purchases').indexOf(x.id)<0;});workRenderCashflow(manual.concat(workCashflowFromPurchases(purchases)));}catch(e){var manual=workScopedRows(workLocalRead('adaptia-work-cashflow')).filter(function(x){return workDeleted('adaptia-work-cashflow').indexOf(x.id)<0;}),purchases=workScopedRows(workLocalRead('adaptia-work-purchases')).filter(function(x){return workDeleted('adaptia-work-purchases').indexOf(x.id)<0;});workRenderCashflow(manual.concat(workCashflowFromPurchases(purchases)));}}
+async function workSavePurchase(e){e.preventDefault();var item=document.getElementById('workPurchaseItem'),price=document.getElementById('workPurchasePrice'),unit=document.getElementById('workPurchaseUnit'),quantity=document.getElementById('workPurchaseQuantity');if(unit.value==='pack'&&Number(quantity.value)<2){alert('Isi jumlah unit di dalam pack dulu, contoh 10.');quantity.focus();return;}try{var res=await fetch('/api/work/purchases',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({item:item.value,price:price.value,unit:unit.value,quantity:quantity.value,workplaceId:workCurrentPlace().id})}),d=await res.json();if(!res.ok)throw new Error(d.error||'Gagal menyimpan');workLocalAdd('adaptia-work-purchases',d.purchase);item.value='';price.value='';quantity.value='';workUpdateUnitPrice();workLoadPurchases();}catch(err){alert(err.message);}}
+async function workSaveEvent(e){e.preventDefault();var title=document.getElementById('workEventTitle'),time=document.getElementById('workEventTime'),location=document.getElementById('workEventLocation'),note=document.getElementById('workEventNote'),rem=document.getElementById('workEventReminder');try{var res=await fetch('/api/work/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:title.value,startsAt:time.value,location:location.value,note:note?note.value:'',reminderMinutes:rem.value,workplaceId:workCurrentPlace().id})});var d=await res.json();if(!res.ok)throw new Error(d.error||'Gagal menyimpan acara');workLocalAdd('adaptia-work-events',d.event);title.value='';time.value='';location.value='';if(note)note.value='';workLoadEvents();}catch(err){alert(err.message);}}
+async function workSaveCashflow(e){e.preventDefault();var type=document.getElementById('workCashflowType'),note=document.getElementById('workCashflowNote'),amount=document.getElementById('workCashflowAmount'),unit=document.getElementById('workCashflowPurchaseUnit'),quantity=document.getElementById('workCashflowPurchaseQuantity');if(type.value==='expense'&&unit.value==='pack'&&Number(quantity.value)<2){alert('Isi jumlah unit di dalam pack/renceng dulu.');quantity.focus();return;}try{var res=await fetch('/api/work/cashflow',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:type.value,note:note.value,amount:amount.value,purchaseUnit:unit.value,purchaseQuantity:quantity.value,workplaceId:workCurrentPlace().id})}),d=await res.json();if(!res.ok)throw new Error(d.error||'Gagal menyimpan arus kas');workLocalAdd('adaptia-work-cashflow',d.entry);if(d.purchase)workLocalAdd('adaptia-work-purchases',d.purchase);note.value='';amount.value='';quantity.value='';workLoadCashflow();}catch(err){alert(err.message);}}
+async function workBuildAdvisorContext(){var read=function(url){return fetch(url,{credentials:'same-origin'}).then(function(r){return r.ok?r.json():{};}).catch(function(){return{};});};var parts=await Promise.all([read('/api/work/purchases'),read('/api/work/cashflow'),read('/api/work/events')]);var purchases=workMergeRows(parts[0].purchases,workLocalRead('adaptia-work-purchases')).filter(function(x){return workDeleted('adaptia-work-purchases').indexOf(x.id)<0;}).slice(0,40);var cashflow=workMergeRows(parts[1].cashflow,workLocalRead('adaptia-work-cashflow')).filter(function(x){return workDeleted('adaptia-work-cashflow').indexOf(x.id)<0;}).slice(0,40);var events=workMergeRows(parts[2].events,workLocalRead('adaptia-work-events')).filter(function(x){return workDeleted('adaptia-work-events').indexOf(x.id)<0;}).slice(0,30);return {workplace:workCurrentPlace().name,now:new Date().toLocaleString('id-ID',{weekday:'long',dateStyle:'full',timeStyle:'short'}),purchases:purchases.map(function(x){return {item:x.item,price:Number(x.price)||0,unit:x.unit||'satuan',quantity:Number(x.quantity)||1,unitPrice:Number(x.unitPrice)||0,date:x.date||x.createdAt||''};}),cashflow:cashflow.map(function(x){return {type:x.type,note:x.note,amount:Number(x.amount)||0,date:x.date||x.createdAt||''};}),events:events.map(function(x){return {title:x.title,startsAt:x.startsAt,location:x.location,note:x.note||''};})};}
+async function workBuildAdvisorContext(){var read=function(url){return fetch(url,{credentials:'same-origin'}).then(function(r){return r.ok?r.json():{};}).catch(function(){return{};});};var parts=await Promise.all([read(workScopeUrl('/api/work/purchases')),read(workScopeUrl('/api/work/cashflow')),read(workScopeUrl('/api/work/events'))]);var purchases=workScopedRows(workMergeRows(parts[0].purchases,workLocalRead('adaptia-work-purchases'))).filter(function(x){return workDeleted('adaptia-work-purchases').indexOf(x.id)<0;}).slice(0,40);var cashflow=workScopedRows(workMergeRows(parts[1].cashflow,workLocalRead('adaptia-work-cashflow'))).filter(function(x){return workDeleted('adaptia-work-cashflow').indexOf(x.id)<0;}).slice(0,40);var events=workScopedRows(workMergeRows(parts[2].events,workLocalRead('adaptia-work-events'))).filter(function(x){return workDeleted('adaptia-work-events').indexOf(x.id)<0;}).slice(0,30);return {workplace:workCurrentPlace().name,now:new Date().toLocaleString('id-ID',{weekday:'long',dateStyle:'full',timeStyle:'short'}),purchases:purchases.map(function(x){return {item:x.item,price:Number(x.price)||0,unit:x.unit||'satuan',quantity:Number(x.quantity)||1,unitPrice:Number(x.unitPrice)||0,date:x.date||x.createdAt||''};}),cashflow:cashflow.map(function(x){return {type:x.type,note:x.note,amount:Number(x.amount)||0,date:x.date||x.createdAt||''};}),events:events.map(function(x){return {title:x.title,startsAt:x.startsAt,location:x.location,note:x.note||''};})};}
+async function workEditPurchase(id){var x=workPurchaseRows.find(function(r){return r.id===id;});if(!x)return;var item=prompt('Nama item',x.item);if(item===null)return;var price=prompt('Harga',x.price);if(price===null)return;var unit=prompt('Ketik satuan atau pack',x.unit==='pack'?'pack':'satuan');if(unit===null)return;var quantity=prompt('Jumlah',x.quantity||1);if(quantity===null)return;var updated=Object.assign({},x,{item:item,price:Number(price),unit:unit==='pack'?'pack':'satuan',quantity:Number(quantity)||1,workplaceId:workCurrentPlace().id,date:new Date().toISOString()});workLocalAdd('adaptia-work-purchases',updated);workRenderPurchases(workPurchaseRows.map(function(r){return r.id===id?updated:r;}));try{await fetch('/api/work/purchases',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(updated)});}catch(e){}}
+async function workEditEvent(id){var x=workEventRows.find(function(r){return r.id===id;});if(!x)return;var title=prompt('Nama acara',x.title);if(title===null)return;var startsAt=prompt('Waktu ISO, contoh 2030-01-01T10:00',x.startsAt);if(startsAt===null)return;var location=prompt('Lokasi',x.location||'');if(location===null)return;var note=prompt('Catatan acara',x.note||'');if(note===null)return;var updated=Object.assign({},x,{title:title,startsAt:startsAt,location:location,note:note,workplaceId:workCurrentPlace().id});workLocalAdd('adaptia-work-events',updated);workRenderEvents(workEventRows.map(function(r){return r.id===id?updated:r;}));try{await fetch('/api/work/events',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(updated)});}catch(e){}}
+async function workAsk(e){e.preventDefault();var input=document.getElementById('workChatInput'),log=document.getElementById('workChatLog'),text=(input&&input.value||'').trim();if(!text)return;input.value='';log.innerHTML+='<div class="finance-chat-msg user">'+financeEsc(text)+'</div><div class="finance-chat-msg bot" id="workTyping">Membaca konteks kerja dan menyusun saran...</div>';log.scrollTop=log.scrollHeight;try{var context=await workBuildAdvisorContext();var prompt='[Workspace Pekerjaan + Penasehat Pembelian]\nWorkspace aktif: '+context.workplace+'\nJawab dalam bahasa Indonesia santai dan praktis. Gunakan hanya data workspace aktif ini.\n\nKONTEKS WORKSPACE:\n'+JSON.stringify(context)+'\n\nPERTANYAAN USER: '+text;workChatHistory.push({role:'user',text:prompt});var res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:prompt,history:workChatHistory.slice(-10),memory:typeof getMemoryPayload==='function'?getMemoryPayload():[]})});var d=await res.json(),reply=d.reply||d.error||'Maaf, belum bisa menjawab sekarang.';workChatHistory.push({role:'assistant',text:reply});var typing=document.getElementById('workTyping');if(typing)typing.outerHTML='<div class="finance-chat-msg bot">'+financeEsc(reply).replace(/\n/g,'<br>')+'</div>';}catch(err){var t=document.getElementById('workTyping');if(t)t.textContent='Gagal: '+err.message;}log.scrollTop=log.scrollHeight;}
+
+var projectChatHistory=[];
+function openProjectWorkspace(startTab){if(typeof catPanel!=='undefined'&&catPanel)catPanel.classList.remove('active');var el=document.getElementById('projectWorkspace');if(!el)return;el.classList.add('show');projectTab(startTab||'overview');}
+function closeProjectWorkspace(){var el=document.getElementById('projectWorkspace');if(el)el.classList.remove('show');}
+function projectTab(name){document.querySelectorAll('[data-project-tab]').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-project-tab')===name);});['overview','build','tuning','upgrade'].forEach(function(n){var p=document.getElementById('projectPane'+n.charAt(0).toUpperCase()+n.slice(1));if(p)p.classList.toggle('active',n===name);});if(name==='overview')projectLoadOverview();}
+async function projectLoadOverview(){var el=document.getElementById('projectOverviewContent');if(!el)return;el.innerHTML='<div class="finance-muted">Memuat status project...</div>';try{var h=await fetch('/api/health',{cache:'no-store'}).then(function(r){return r.json();}),d=await workLoadData();el.innerHTML='<div class="finance-grid"><div class="finance-card"><div class="finance-card-label">Versi live</div><div class="finance-card-value">'+financeEsc(h.version||'unknown')+'</div></div><div class="finance-card"><div class="finance-card-label">Platform</div><div class="finance-card-value" style="font-size:15px">'+financeEsc(h.platform||'cloudflare-workers')+'</div></div><div class="finance-card"><div class="finance-card-label">Project tersimpan</div><div class="finance-card-value">'+((d.projects||[]).length)+'</div></div><div class="finance-card"><div class="finance-card-label">Health memori</div><div class="finance-card-value finance-positive">'+(h.memory_health&&(!h.memory_health.issues||!h.memory_health.issues.length)?'Normal':'Perlu cek')+'</div></div></div><div class="finance-card" style="margin-top:12px"><div class="finance-card-label">Mode pengembangan</div><div class="finance-card-value" style="font-size:15px">Preview dan verifikasi sebelum apply</div><div class="finance-muted" style="margin-top:8px">Gunakan tab Build, Tuning, atau Upgrade untuk melanjutkan.</div></div>';}catch(e){workError('projectOverviewContent',e);}}
+function projectQuickChat(text){var input=document.getElementById('projectChatInput');if(input){input.value=text;input.focus();}projectAsk({preventDefault:function(){}});}
+function openProjectBuildPrompt(prompt){openBuildOverlay();buildEditMode();var input=document.getElementById('buildPrompt');if(input){input.value=prompt;input.focus();}}
+async function projectAsk(e){e.preventDefault();var input=document.getElementById('projectChatInput'),log=document.getElementById('projectChatLog'),text=(input&&input.value||'').trim();if(!text)return;input.value='';log.innerHTML+='<div class="finance-chat-msg user">'+financeEsc(text)+'</div><div class="finance-chat-msg bot" id="projectTyping">Menganalisis project...</div>';log.scrollTop=log.scrollHeight;try{var prompt='[Workspace Project Adaptia] Jawab sebagai partner teknis khusus project Adaptia. Fokus pada build, tuning, upgrade, bug, arsitektur, risiko perubahan, preview, verifikasi, dan status nyata. Jangan mengklaim deploy/apply jika belum benar-benar dilakukan. Pertanyaan user: '+text;projectChatHistory.push({role:'user',text:prompt});var res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:prompt,history:projectChatHistory.slice(-10),memory:typeof getMemoryPayload==='function'?getMemoryPayload():[]})});var d=await res.json(),reply=d.reply||d.error||'Maaf, belum bisa menjawab sekarang.';projectChatHistory.push({role:'assistant',text:reply});var typing=document.getElementById('projectTyping');if(typing)typing.outerHTML='<div class="finance-chat-msg bot">'+financeEsc(reply).replace(/\n/g,'<br>')+'</div>';}catch(err){var t=document.getElementById('projectTyping');if(t)t.textContent='Gagal: '+err.message;}log.scrollTop=log.scrollHeight;}
+
 async function showDashboard() {
   const overlay = document.getElementById('dashboardOverlay');
   const content = document.getElementById('dashContent');
@@ -5355,9 +5752,11 @@ async function loadMemoryJournal(){
         h += '<div style="margin-top:8px;padding:8px 10px;background:rgba(255,255,255,0.05);border-radius:8px;font-size:13px">';
         h += '<div>'+it.t+'</div>';
         h += '<div style="margin-top:6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">';
-        h += '<span style="font-size:11px;color:var(--dim)">⭐'+(it.imp||4)+' · 🔗'+(it.str!=null?it.str.toFixed(2):'0.60')+' · '+it.conf+(it.pinned?' · 📌':'')+(it.mood&&it.mood!=='umum'?' · '+it.mood:'')+'</span>';
+        h += '<span style="font-size:11px;color:var(--dim)">⭐'+(it.imp||4)+' · 🔗'+(it.str!=null?it.str.toFixed(2):'0.60')+' · '+it.conf+' · '+(it.type||'episodic')+(it.status&&it.status!=='active'?' · '+it.status:'')+(it.pinned?' · 📌':'')+(it.mood&&it.mood!=='umum'?' · '+it.mood:'')+'</span>';
         h += '<span style="margin-left:auto;display:flex;gap:4px">';
         h += '<button onclick="journalBtn(\''+(it.pinned?'unpin':'pin')+'\',\''+t.topic+'\',this)" data-t="'+encodeURIComponent(it.t)+'" title="Pin/Unpin" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:6px;padding:2px 6px;font-size:12px;cursor:pointer">📌</button>';
+        if(it.status === 'active' && !it.confirmedAt) h += '<button onclick="journalBtn(\'confirm\',\''+t.topic+'\',this)" data-t="'+encodeURIComponent(it.t)+'" title="Konfirmasi fakta" style="background:rgba(80,180,120,0.15);border:1px solid rgba(80,180,120,0.4);color:#fff;border-radius:6px;padding:2px 6px;font-size:12px;cursor:pointer">✓</button>';
+        if(it.status && it.status !== 'active') h += '<button onclick="journalBtn(\'restore\',\''+t.topic+'\',this)" data-t="'+encodeURIComponent(it.t)+'" title="Pulihkan" style="background:rgba(100,150,255,0.15);border:1px solid rgba(100,150,255,0.4);color:#fff;border-radius:6px;padding:2px 6px;font-size:12px;cursor:pointer">↶</button>';
         h += '<button onclick="journalBtn(\'boost\',\''+t.topic+'\',this)" data-t="'+encodeURIComponent(it.t)+'" title="Naikkan kepentingan" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:6px;padding:2px 6px;font-size:12px;cursor:pointer">⭐+</button>';
         h += '<button onclick="journalBtn(\'demote\',\''+t.topic+'\',this)" data-t="'+encodeURIComponent(it.t)+'" title="Turunkan kepentingan" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:6px;padding:2px 6px;font-size:12px;cursor:pointer">⭐-</button>';
         h += '<button onclick="if(confirm(\'Hapus memori ini?\')){journalBtn(\'delete\',\''+t.topic+'\',this)}" data-t="'+encodeURIComponent(it.t)+'" title="Hapus" style="background:rgba(255,80,80,0.15);border:1px solid rgba(255,80,80,0.4);color:#fff;border-radius:6px;padding:2px 6px;font-size:12px;cursor:pointer">🗑</button>';
