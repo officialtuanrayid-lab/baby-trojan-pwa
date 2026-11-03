@@ -42,4 +42,8 @@ jobs:
           printf '%s' "$CLOUDFLARE_API_TOKEN" > "$CF_TOKEN_FILE"
           trap 'printf "" > "$CF_TOKEN_FILE"' EXIT
           bash adaptia.sh --dry-run
-          bash adaptia.sh
+          # Deploy the freshly built bundle through the guarded deployer.
+          # It captures the active version and automatically rolls back when
+          # health/self-monitor checks fail after propagation.
+          FILE=worker-latest.js bash scripts/safe-deploy.sh
+          cp worker-latest.js worker-current-live.js
