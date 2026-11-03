@@ -9279,6 +9279,27 @@ async function getAreaRegistryContext() {
     return new Response(JSON.stringify({greeting:g[Math.floor(Math.random()*g.length)]}),{headers:{'Content-Type':'application/json',...CORS}});
   }
 
+  // ===== WORKSPACE MEMORY & AUDIT NAMESPACE =====
+  if(path==='/api/workspace/audit'&&(method==='GET'||method==='POST')){
+    try{
+      const body=method==='POST'?await request.json():{};
+      const workspace=String(body.workspace||new URL(request.url).searchParams.get('workspace')||'default').toLowerCase().replace(/[^a-z0-9_-]/g,'').substring(0,32)||'default';
+      const key='workspace_audit_'+workspace;
+      let rows=await kvGet(key)||[]; if(!Array.isArray(rows)) rows=[];
+      if(method==='POST'){const action=sanitize(String(body.action||'chat')).substring(0,80),detail=sanitize(String(body.detail||'')).substring(0,600);rows.push({id:crypto.randomUUID(),action,detail,at:new Date().toISOString()});rows=rows.slice(-200);await kvPut(key,rows);}
+      return new Response(JSON.stringify({status:'ok',workspace,audit:rows.slice(-100).reverse()}),{headers:{'Content-Type':'application/json',...CORS}});
+    }catch(e){return new Response(JSON.stringify({error:e.message||'Gagal menyimpan audit workspace'}),{status:500,headers:{'Content-Type':'application/json',...CORS}});}
+  }
+  if(path==='/api/workspace/memory'&&(method==='GET'||method==='POST')){
+    try{
+      const body=method==='POST'?await request.json():{};
+      const workspace=String(body.workspace||new URL(request.url).searchParams.get('workspace')||'default').toLowerCase().replace(/[^a-z0-9_-]/g,'').substring(0,32)||'default';
+      const key='workspace_memory_'+workspace;
+      if(method==='POST'){const memory=Array.isArray(body.memory)?body.memory.slice(-100):[];await kvPut(key,memory);return new Response(JSON.stringify({status:'ok',workspace,memory}),{headers:{'Content-Type':'application/json',...CORS}});}
+      const memory=await kvGet(key)||[];return new Response(JSON.stringify({status:'ok',workspace,memory:Array.isArray(memory)?memory.slice(-100):[]}),{headers:{'Content-Type':'application/json',...CORS}});
+    }catch(e){return new Response(JSON.stringify({error:e.message||'Gagal membaca memory workspace'}),{status:500,headers:{'Content-Type':'application/json',...CORS}});}
+  }
+
   if(path==='/api/build-engine'&&method==='POST'){
     try{
       const body=await request.json();

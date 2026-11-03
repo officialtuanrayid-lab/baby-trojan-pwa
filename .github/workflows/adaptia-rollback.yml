@@ -1,0 +1,31 @@
+name: Rollback Adaptia
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_id:
+        description: "Cloudflare version ID tujuan rollback"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rollback deployment
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          VERSION_ID: ${{ inputs.version_id }}
+        run: |
+          set -euo pipefail
+          body=$(printf '{"strategy":"percentage","versions":[{"version_id":"%s","percentage":100}]}' "$VERSION_ID")
+          curl --fail-with-body --silent --show-error \
+            -X POST "https://api.cloudflare.com/client/v4/accounts/90f83dd411034aaed5bad0c17576c159/workers/scripts/adaptia/deployments" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data "$body"
+          sleep 10
+          curl --fail --silent --show-error https://adaptia.isaacdev.workers.dev/api/health

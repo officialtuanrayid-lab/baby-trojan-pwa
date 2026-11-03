@@ -1,0 +1,27 @@
+name: Adaptia Health Audit
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 18 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check live health
+        run: |
+          set -euo pipefail
+          health="$(curl -fsSL --max-time 30 https://adaptia.isaacdev.workers.dev/api/health)"
+          echo "$health"
+          echo "$health" | grep -q '"status":"ok"'
+      - name: Check live UI
+        run: |
+          set -euo pipefail
+          page="$(curl -fsSL --max-time 30 https://adaptia.isaacdev.workers.dev/)"
+          echo "UI bytes: ${#page}"
+          test "${#page}" -gt 100000
+          echo "$page" | grep -q 'Project Adaptia'

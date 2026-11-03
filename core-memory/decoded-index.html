@@ -16,7 +16,7 @@
 <link rel="manifest" href="/manifest.json?v=5">
 <link rel="icon" type="image/png" href="/icons/icon-192.png?v=2">
 <link rel="apple-touch-icon" href="/icons/icon-192.png?v=2">
-<title>ADAPTIA (v7.3.391)</title>
+<title>ADAPTIA (v7.3.392)</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -1758,7 +1758,7 @@ oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
 // === AUTO-UPDATE + PWA: register SW untuk fullscreen, force-clear hanya saat versi berubah ===
 (function(){
   try {
-    var VER = 'adaptia-v2.388';
+    var VER = 'adaptia-v2.389';
     var saved = localStorage.getItem('adaptia-ver');
     if (saved && saved !== VER) {
       // Versi berubah -> clear cache & reload sekali (bukan tiap load)
@@ -5572,7 +5572,7 @@ var workspaceExpertProfiles={
   work:{name:'Manajer Operasional Pekerjaan',rule:'Gunakan hanya data tempat kerja aktif. Prioritaskan saran praktis, biaya, waktu, dan kebutuhan nyata.',format:'Jawab dengan bagian: Rekomendasi, Perkiraan biaya, Prioritas, Catatan.'},
   project:{name:'Technical Lead Adaptia',rule:'Jangan klaim perubahan sudah diterapkan sebelum status Build Engine menyatakan selesai. Jelaskan dampak, risiko, dan verifikasi.',format:'Jawab dengan bagian: Analisis, Rencana, Risiko, Verifikasi.'}
 };
-function workspaceAuditLog(workspace,action,detail){try{var key='adaptia-audit-'+workspace,rows=JSON.parse(localStorage.getItem(key)||'[]');rows.push({action:action,detail:String(detail||'').slice(0,500),at:new Date().toISOString()});localStorage.setItem(key,JSON.stringify(rows.slice(-100)));}catch(e){}}
+function workspaceAuditLog(workspace,action,detail){var item={action:action,detail:String(detail||'').slice(0,500),at:new Date().toISOString()};try{var key='adaptia-audit-'+workspace,rows=JSON.parse(localStorage.getItem(key)||'[]');rows.push(item);localStorage.setItem(key,JSON.stringify(rows.slice(-100)));}catch(e){}try{fetch('/api/workspace/audit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({workspace:workspace,action:action,detail:item.detail}),keepalive:true}).catch(function(){});}catch(e){}}
 function workspaceExpertPrompt(workspace,question,context){var p=workspaceExpertProfiles[workspace]||workspaceExpertProfiles.project;return '[Workspace '+workspace.toUpperCase()+'] Kamu berperan sebagai '+p.name+'.\nAturan: '+p.rule+'\nFormat: '+p.format+'\nJika informasi kurang, nyatakan tingkat keyakinan dan data yang dibutuhkan.\n'+(context||'')+'\nPERTANYAAN USER: '+question;}
 function financeEsc(v){ return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function financeMoney(v){ var n=Number(v)||0; return 'Rp' + n.toLocaleString('id-ID'); }
