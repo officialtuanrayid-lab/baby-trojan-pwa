@@ -20,16 +20,18 @@ async function adaptiaBackendExtension(request, path, method, CORS) {
   const parseWorkspaceAction = (workspace, message, workplaceId) => {
     const text = String(message || '').trim();
     const lower = text.toLowerCase();
-    const moneyMatch = text.match(/(?:rp\s*)?([0-9][0-9.,]*)/i);
-    const amount = moneyMatch ? parseMoney(moneyMatch[1]) : 0;
     const packMatch = lower.match(/(?:sebanyak\s*)?(\d+)\s*(pack|renceng|pcs|buah|unit)/i);
     const quantity = packMatch ? Math.max(1, Number(packMatch[1])) : 1;
     const unit = packMatch && /pack|renceng/i.test(packMatch[2]) ? 'pack' : 'satuan';
+    const priceMatch = text.match(/(?:harga|nominal|sebesar|total)\s*(?:rp\s*)?([0-9][0-9.,]*)/i);
+    const numberMatches = Array.from(text.matchAll(/(?:rp\s*)?([0-9][0-9.,]*)/ig));
+    const moneyMatch = priceMatch || numberMatches[numberMatches.length - 1];
+    const amount = moneyMatch ? parseMoney(moneyMatch[1]) : 0;
     const expense = /(uang\s*keluar|pengeluaran|belanja|beli|pembelian|bayar)/i.test(lower);
     const income = /(uang\s*masuk|pemasukan|terima|pendapatan|gaji)/i.test(lower);
     if ((workspace === 'work' || workspace === 'finance') && amount > 0 && (expense || income)) {
       let note = text.replace(/(?:rp\s*)?[0-9][0-9.,]*/ig, '')
-        .replace(/\b(cat(et|at)|uang\s*(keluar|masuk)|pengeluaran|pemasukan|belanja|beli|pembelian|bayar|terima|pendapatan|gaji|sebanyak|pack|renceng|pcs|buah|unit)\b/ig, ' ')
+        .replace(/\b(cat(et|at)|uang\s*(keluar|masuk)|pengeluaran|pemasukan|belanja|beli|pembelian|bayar|terima|pendapatan|gaji|harga|nominal|sebesar|total|sebanyak|pack|renceng|pcs|buah|unit)\b/ig, ' ')
         .replace(/\s+/g, ' ').trim();
       if (!note) note = expense ? 'Belanja kerja' : 'Pemasukan';
       return { kind: income ? 'income' : 'expense', workspace, note: note.substring(0, 160), amount, unit, quantity, workplaceId: String(workplaceId || 'mdc-bekasi').substring(0, 80) };
