@@ -59,11 +59,14 @@ for (const model of models) for (const key of keys) {
 }
 if (!result) {
   try {
+    const compactInstruction = instruction.length > 50000 ? instruction.substring(0, 50000) + '\n\n[Source dipotong untuk batas request. Buat patch hanya dari konteks yang terlihat.]' : instruction;
     const response = await fetch('https://adaptia.isaacdev.workers.dev/api/chat', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: instruction + '\n\nBalas JSON valid saja sesuai format patch.', history: [] })
+      body: JSON.stringify({ message: compactInstruction + '\n\nBalas JSON valid saja sesuai format patch.', history: [] })
     });
-    const data = await response.json();
+    const raw = await response.text();
+    let data;
+    try { data = JSON.parse(raw); } catch { throw new Error('Fallback Adaptia mengembalikan respons non-JSON: HTTP ' + response.status); }
     const text = String(data?.reply || '');
     const match = text.match(/\{[\s\S]*\}/);
     if (match) result = JSON.parse(match[0]);
