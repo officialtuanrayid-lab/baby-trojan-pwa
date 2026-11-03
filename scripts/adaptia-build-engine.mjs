@@ -37,13 +37,17 @@ ${context}`;
 
 let result;
 let lastError;
-for (const key of keys) {
+const models = ['gemini-3.8-flash', 'gemini-3.8-flash-lite'];
+for (const model of models) for (const key of keys) {
   try {
-    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=' + encodeURIComponent(key), {
-      method: 'POST',
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 45000);
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + encodeURIComponent(key), {
+      method: 'POST', signal: controller.signal,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: instruction }] }], generationConfig: { temperature: 0.2, maxOutputTokens: 8192 } })
     });
+    clearTimeout(timer);
     const data = await response.json();
     const text = data?.candidates?.[0]?.content?.parts?.map(x => x.text || '').join('') || '';
     const match = text.match(/\{[\s\S]*\}/);
@@ -51,6 +55,7 @@ for (const key of keys) {
     result = JSON.parse(match[0]);
     break;
   } catch (error) { lastError = error; }
+  if (result) break;
 }
 if (!result) throw lastError || new Error('Build engine gagal');
 
