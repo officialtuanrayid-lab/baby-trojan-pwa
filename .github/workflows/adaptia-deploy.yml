@@ -38,7 +38,8 @@ jobs:
         run: |
           set -euo pipefail
           umask 077
-          printf '%s' "$CLOUDFLARE_API_TOKEN" > /root/.cf-token
-          trap 'printf "" > /root/.cf-token' EXIT
+          export CF_TOKEN_FILE="$RUNNER_TEMP/adaptia-cf-token"
+          printf '%s' "$CLOUDFLARE_API_TOKEN" > "$CF_TOKEN_FILE"
+          trap 'printf "" > "$CF_TOKEN_FILE"' EXIT
           bash adaptia.sh --dry-run
           bash adaptia.sh
