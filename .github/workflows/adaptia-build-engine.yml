@@ -42,14 +42,14 @@ jobs:
       - name: Install pinned tooling
         run: npm ci --ignore-scripts
 
-      - name: Generate and validate patch
+      - name: Agent loop — generate, validate, repair
         env:
           ADAPTIA_BUILD_PROMPT: ${{ inputs.prompt }}
           ADAPTIA_BUILD_MODE: ${{ inputs.mode }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_FALLBACK_KEY: ${{ secrets.GEMINI_FALLBACK_KEY }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: node scripts/adaptia-build-engine.mjs
+        run: node scripts/adaptia-agent-loop.mjs
 
       - name: Upload build report
         if: always()
