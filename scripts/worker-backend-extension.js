@@ -16,9 +16,42 @@ async function adaptiaBackendExtension(request, path, method, CORS) {
     return json({
       status: 'ok',
       source: 'worker-backend-extension',
-      capabilities: ['custom-endpoints', 'workspace-memory', 'workspace-audit', 'safe-deploy'],
+      capabilities: ['custom-endpoints', 'workspace-memory', 'workspace-audit', 'specialist-agents', 'safe-deploy'],
       timestamp: new Date().toISOString()
     });
+  }
+
+  if (path === '/api/workspace/agent' && method === 'POST') {
+    try {
+      const body = await request.json();
+      const workspace = String(body.workspace || '').toLowerCase();
+      const profiles = {
+        finance: {
+          name: 'Agent Keuangan',
+          rules: 'Pisahkan fakta, asumsi, dan rekomendasi. Hitung angka dari data yang tersedia. Jangan menjanjikan profit dan jangan mengeksekusi transaksi.',
+          actions: 'Analisis transaksi, budget, saldo, harga barang, dan pola pengeluaran.'
+        },
+        work: {
+          name: 'Agent Operasional Pekerjaan',
+          rules: 'Gunakan tempat kerja aktif sebagai konteks utama. Prioritaskan biaya, waktu, kebutuhan nyata, dan urutan kerja.',
+          actions: 'Susun prioritas, analisis belanja, acara, stok, budget, dan rekomendasi operasional.'
+        }
+      };
+      const profile = profiles[workspace];
+      if (!profile) return json({ error: 'Agent workspace tidak tersedia' }, 400);
+      const message = String(body.message || '').trim().substring(0, 4000);
+      if (!message || (typeof isValidInput === 'function' && !isValidInput(message))) return json({ error: 'Pesan agent tidak valid' }, 400);
+      const history = Array.isArray(body.history) ? body.history.slice(-10).map((item) => ({
+        role: item.role === 'assistant' ? 'assistant' : 'user',
+        text: String(item.text || item.content || '').substring(0, 1200)
+      })) : [];
+      const context = String(body.context || '').substring(0, 7000);
+      const specialistContext = `\n\n== AGENT SPESIALIS ${workspace.toUpperCase()} ==\nNama agent: ${profile.name}\nAturan: ${profile.rules}\nBatas tindakan: ${profile.actions}\nJawab sebagai agent spesialis workspace ini, bukan sebagai developer atau agent workspace lain.\n== KONTEKS WORKSPACE ==\n${context}`;
+      const reply = await aiReply(message, history, null, specialistContext);
+      return json({ status: 'ok', workspace, agent: profile.name, reply: reply || 'Agent belum mendapat jawaban.' });
+    } catch (error) {
+      return json({ error: error.message || 'Agent workspace gagal memproses pesan' }, 500);
+    }
   }
 
   // Append one bounded memory item without requiring the UI to replace the
