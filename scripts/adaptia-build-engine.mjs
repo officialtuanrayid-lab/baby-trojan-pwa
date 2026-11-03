@@ -57,6 +57,19 @@ for (const model of models) for (const key of keys) {
   } catch (error) { lastError = error; }
   if (result) break;
 }
+if (!result) {
+  try {
+    const response = await fetch('https://adaptia.isaacdev.workers.dev/api/chat', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: instruction + '\n\nBalas JSON valid saja sesuai format patch.', history: [] })
+    });
+    const data = await response.json();
+    const text = String(data?.reply || '');
+    const match = text.match(/\{[\s\S]*\}/);
+    if (match) result = JSON.parse(match[0]);
+    else if (data?.error) lastError = new Error(data.error);
+  } catch (error) { lastError = error; }
+}
 if (!result) throw lastError || new Error('Build engine gagal');
 
 const patches = Array.isArray(result.patches) ? result.patches : [];
