@@ -24,4 +24,4 @@ jobs:
           page="$(curl -fsSL --max-time 30 https://adaptia.isaacdev.workers.dev/)"
           echo "UI bytes: ${#page}"
           test "${#page}" -gt 100000
-          echo "$page" | grep -q 'Project Adaptia'
+          [[ "$page" == *"Project Adaptia"* ]]
