@@ -9300,6 +9300,19 @@ async function getAreaRegistryContext() {
     }catch(e){return new Response(JSON.stringify({error:e.message||'Gagal membaca memory workspace'}),{status:500,headers:{'Content-Type':'application/json',...CORS}});}
   }
 
+  if(path==='/api/rollback'&&method==='POST'){
+    try{
+      const body=await request.json();
+      const versionId=String(body.versionId||'').trim().substring(0,100);
+      if(!/^[A-Za-z0-9-]{8,100}$/.test(versionId)) return new Response(JSON.stringify({error:'Version ID rollback tidak valid'}),{status:400,headers:{'Content-Type':'application/json',...CORS}});
+      const ghToken=(typeof GITHUB_BUILD_TOKEN!=='undefined'&&GITHUB_BUILD_TOKEN)?String(GITHUB_BUILD_TOKEN):'';
+      if(!ghToken) return new Response(JSON.stringify({error:'Rollback belum terhubung ke GitHub Secret'}),{status:503,headers:{'Content-Type':'application/json',...CORS}});
+      const gh=await fetch('https://api.github.com/repos/officialtuanrayid-lab/baby-trojan-pwa/actions/workflows/adaptia-rollback.yml/dispatches',{method:'POST',headers:{'Authorization':'Bearer '+ghToken,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','Content-Type':'application/json','User-Agent':'Adaptia-Rollback'},body:JSON.stringify({ref:'main',inputs:{version_id:versionId}})});
+      if(!gh.ok) return new Response(JSON.stringify({error:'Gagal memicu rollback',detail:(await gh.text()).substring(0,300)}),{status:502,headers:{'Content-Type':'application/json',...CORS}});
+      return new Response(JSON.stringify({status:'queued',versionId,message:'Rollback sudah masuk antrean GitHub Actions'}),{headers:{'Content-Type':'application/json',...CORS}});
+    }catch(e){return new Response(JSON.stringify({error:e.message||'Gagal menjalankan rollback'}),{status:500,headers:{'Content-Type':'application/json',...CORS}});}
+  }
+
   if(path==='/api/build-engine'&&method==='POST'){
     try{
       const body=await request.json();

@@ -1,0 +1,35 @@
+name: Adaptia Scheduled Upgrade Audit
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "31 18 * * 0"
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts
+      - name: Generate weekly upgrade preview
+        continue-on-error: true
+        env:
+          ADAPTIA_BUILD_PROMPT: "Audit mingguan Adaptia. Cari bug, risiko, peningkatan UX, stabilitas, keamanan, dan performa yang paling bernilai. Jangan mengubah file; buat laporan preview saja dengan prioritas, dampak, dan rekomendasi."
+          ADAPTIA_BUILD_MODE: preview
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_FALLBACK_KEY: ${{ secrets.GEMINI_FALLBACK_KEY }}
+        run: node scripts/adaptia-build-engine.mjs
+      - name: Upload weekly report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: adaptia-weekly-upgrade-audit-${{ github.run_id }}
+          path: .adaptia-build/
+          if-no-files-found: ignore
