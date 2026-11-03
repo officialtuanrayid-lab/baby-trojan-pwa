@@ -16,7 +16,7 @@
 <link rel="manifest" href="/manifest.json?v=5">
 <link rel="icon" type="image/png" href="/icons/icon-192.png?v=2">
 <link rel="apple-touch-icon" href="/icons/icon-192.png?v=2">
-<title>ADAPTIA (v7.3.378)</title>
+<title>ADAPTIA (v7.3.380)</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -1539,6 +1539,7 @@ oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
       <button class="build-btn build-btn-secondary" onclick="selectBuildMode('new')">➤ Mode Build Baru</button>
       <button class="build-btn build-btn-secondary" id="buildModeEdit" onclick="buildEditMode()">✏️ Edit Project</button>
     </div>
+    <div style="margin-top:10px"><label for="buildExecutionMode" style="display:block;color:var(--dim);font-size:11px;margin-bottom:5px">Hasil eksekusi</label><select class="finance-input" id="buildExecutionMode"><option value="preview">Preview saja</option><option value="apply">Apply resmi ke GitHub</option><option value="deploy">Apply + deploy ke Adaptia live</option></select></div>
     <div class="build-status" id="buildStatus"></div>
     <div class="build-preview" id="buildPreview">
       <div class="build-preview-head">
@@ -1755,7 +1756,7 @@ oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
 // === AUTO-UPDATE + PWA: register SW untuk fullscreen, force-clear hanya saat versi berubah ===
 (function(){
   try {
-    var VER = 'adaptia-v2.375';
+    var VER = 'adaptia-v2.377';
     var saved = localStorage.getItem('adaptia-ver');
     if (saved && saved !== VER) {
       // Versi berubah -> clear cache & reload sekali (bukan tiap load)
@@ -3733,19 +3734,21 @@ function buildStatusMsg(msg, type){
 async function doBuild(){
   var prompt = document.getElementById('buildPrompt').value.trim();
   if (!prompt){ buildStatusMsg('Tulis prompt dulu, cuy!', 'error'); return; }
+  var execution=document.getElementById('buildExecutionMode'),mode=execution?execution.value:'preview';
+  if(mode==='deploy'&&!confirm('Deploy akan mengubah Adaptia live setelah test. Lanjutkan?'))return;
   buildStatusMsg('⌛ Mengirim instruksi ke Build Engine GitHub...', '');
   document.getElementById('buildPreview').classList.remove('show');
   document.getElementById('buildApplyBtn').classList.remove('show');
   buildState = null;
   try {
-    var res = await fetch('/api/build-engine', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt,mode:'preview'})});
+    var res = await fetch('/api/build-engine', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt,mode:mode})});
     var d = await res.json();
     if (!res.ok || d.status !== 'queued') { buildStatusMsg('❌ ' + (d.error || 'Build Engine gagal dipicu'), 'error'); return; }
-    buildStatusMsg('✅ Build Engine aktif. Preview sedang diproses di GitHub Actions...', 'ok');
+    buildStatusMsg('✅ Build Engine aktif ('+mode+'). GitHub Actions sedang memproses...', 'ok');
     pollBuildEngineStatus();
   } catch(e){ buildStatusMsg('❌ Error: ' + e.message, 'error'); }
 }
-async function pollBuildEngineStatus(){try{var d=await fetch('/api/build-engine/status',{cache:'no-store'}).then(function(r){return r.json();});if(d.status==='completed'){buildStatusMsg((d.conclusion==='success'?'✅':'❌')+' Build Engine selesai: '+(d.conclusion||'unknown')+(d.url?' — buka log GitHub':'') ,d.conclusion==='success'?'ok':'error');return;}if(d.status==='queued'||d.status==='in_progress'){setTimeout(pollBuildEngineStatus,5000);}}catch(e){}}
+async function pollBuildEngineStatus(){try{var d=await fetch('/api/build-engine/status',{cache:'no-store'}).then(function(r){return r.json();});if(d.status==='completed'){buildStatusMsg((d.conclusion==='success'?'✅':'❌')+' Build Engine selesai: '+(d.conclusion||'unknown')+(d.url?' — log GitHub tersedia':'') ,d.conclusion==='success'?'ok':'error');return;}if(d.status==='queued'||d.status==='in_progress'){setTimeout(pollBuildEngineStatus,5000);}}catch(e){setTimeout(pollBuildEngineStatus,7000);}}
 function showBuildFiles(files){
   var pv = document.getElementById('buildPreview');
   pv.classList.add('show');
