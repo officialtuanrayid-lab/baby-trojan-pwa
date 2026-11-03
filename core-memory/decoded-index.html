@@ -1533,13 +1533,12 @@ oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
     <button class="build-close" onclick="closeBuildOverlay()">✕</button>
   </div>
   <div class="build-body">
-    <div class="build-label">Tulis prompt project lo</div>
-    <textarea class="build-prompt-text" id="buildPrompt" placeholder="Contoh: bikin game arcade flappy bird dengan tombol start, score, game over, dan background gradasi biru... atau: ubah warna tombol start jadi merah..."></textarea>
-    <div class="build-actions">
-      <button class="build-btn build-btn-secondary" onclick="selectBuildMode('new')">➤ Mode Build Baru</button>
-      <button class="build-btn build-btn-secondary" id="buildModeEdit" onclick="buildEditMode()">✏️ Edit Project</button>
-    </div>
-    <div style="margin-top:10px"><label for="buildExecutionMode" style="display:block;color:var(--dim);font-size:11px;margin-bottom:5px">Hasil eksekusi</label><select class="finance-input" id="buildExecutionMode"><option value="preview">Preview saja</option><option value="apply">Apply resmi ke GitHub</option><option value="deploy">Apply + deploy ke Adaptia live</option></select></div>
+    <div class="build-label">✦ Tulis perubahan Adaptia</div>
+    <div class="finance-muted" style="margin:-3px 0 10px">Satu prompt untuk build, tuning, atau upgrade. Adaptia akan memahami jenis perubahannya dari instruksi lo.</div>
+    <div style="position:relative"><textarea class="build-prompt-text" id="buildPrompt" placeholder="Contoh: rapikan tampilan Belanja di workspace kerjaan agar tidak terpotong, tambahkan edit dan hapus, lalu deploy ke live..." onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();doBuild();}"></textarea><div style="position:absolute;right:10px;bottom:8px;color:var(--dim);font-size:10px">Ctrl + Enter untuk kirim</div></div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px"><button class="build-btn build-btn-secondary" onclick="useBuildExample('Tuning: audit tampilan mobile Adaptia dan perbaiki bagian yang terpotong.')">Tuning UI</button><button class="build-btn build-btn-secondary" onclick="useBuildExample('Upgrade: tambahkan fitur yang paling dibutuhkan workspace project dengan tetap menjaga data yang ada.')">Upgrade fitur</button><button class="build-btn build-btn-secondary" onclick="useBuildExample('Build: buat perubahan sesuai instruksi saya dan jelaskan file yang akan berubah.')">Build perubahan</button></div>
+    <div style="margin-top:12px"><label for="buildExecutionMode" style="display:block;color:var(--dim);font-size:11px;margin-bottom:5px">Setelah dianalisis</label><select class="finance-input" id="buildExecutionMode"><option value="preview">Tampilkan rencana dulu</option><option value="apply">Terapkan ke GitHub</option><option value="deploy">Terapkan + deploy ke Adaptia live</option></select></div>
+    <button class="build-btn build-btn-primary" style="width:100%;margin-top:10px" onclick="doBuild()">➤ Kirim ke Adaptia Builder</button>
     <div class="build-status" id="buildStatus"></div>
     <div class="build-preview" id="buildPreview">
       <div class="build-preview-head">
@@ -1745,7 +1744,7 @@ oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
   </div>
   <div class="finance-body">
     <section class="finance-pane active" id="projectPaneOverview"><div class="finance-section-heading"><h2>Status Project Adaptia</h2><p>Pusat kendali untuk melihat kondisi project dan membuka alur pengembangan.</p></div><div id="projectOverviewContent"><div class="finance-muted">Memuat status project...</div></div></section>
-    <section class="finance-pane" id="projectPaneBuild"><div class="finance-section-heading"><h2>Build</h2><p>Buat atau edit project dengan preview perubahan sebelum diterapkan.</p></div><div class="finance-card"><div class="finance-card-value" style="font-size:16px">Build Workspace</div><div class="finance-muted" style="margin:7px 0 14px">Gunakan build overlay untuk memilih project, menulis instruksi, melihat file yang berubah, lalu melakukan apply.</div><button class="finance-button" onclick="openBuildOverlay()">Buka Build Workspace</button></div></section>
+<section class="finance-pane" id="projectPaneBuild"><div class="finance-section-heading"><h2>Build</h2><p>Satu sesi prompt untuk build, tuning, dan upgrade Adaptia.</p></div><div class="finance-card"><div class="finance-card-value" style="font-size:16px">Adaptia Builder</div><div class="finance-muted" style="margin:7px 0 14px">Tulis apa yang ingin diubah dengan bahasa biasa. Adaptia akan menyusun rencana, memeriksa perubahan, lalu menerapkan atau deploy sesuai pilihanmu.</div><button class="finance-button" onclick="openBuildOverlay()">Buka Sesi Builder</button></div></section>
     <section class="finance-pane" id="projectPaneTuning"><div class="finance-section-heading"><h2>Tuning Adaptia</h2><p>Rencanakan penyempurnaan persona, obrolan, voice, memori, dan UX.</p></div><div class="finance-grid"><div class="finance-card"><div class="finance-card-label">Area tuning</div><div class="finance-card-value" style="font-size:15px">Obrolan · Voice · Memori · UI</div></div><div class="finance-card"><div class="finance-card-label">Mode aman</div><div class="finance-card-value" style="font-size:15px">Preview sebelum apply</div></div></div><button class="finance-button" style="margin-top:12px" onclick="openProjectBuildPrompt('Audit dan tuning area Adaptia yang paling perlu ditingkatkan sekarang. Buat perubahan dalam mode edit dan tampilkan preview.')">Buka tuning preview</button></section>
     <section class="finance-pane" id="projectPaneUpgrade"><div class="finance-section-heading"><h2>Upgrade Adaptia</h2><p>Gunakan alur preview untuk menyusun upgrade, dampak, risiko, dan langkah implementasinya.</p></div><div class="finance-card"><div class="finance-card-label">Alur upgrade</div><div class="finance-card-value" style="font-size:15px">Rencana → Preview → Review → Apply → Verifikasi</div><div class="finance-muted" style="margin-top:8px">Perubahan tidak diterapkan sebelum lu menekan Apply.</div></div><button class="finance-button" style="margin-top:12px" onclick="openProjectBuildPrompt('Susun upgrade Adaptia yang paling penting berikutnya dengan risiko, file yang terdampak, dan preview perubahan.')">Buka upgrade preview</button></section>
     <div class="finance-chat"><div class="finance-chat-title">💬 Chat teknis dengan Adaptia</div><div class="finance-chat-log" id="projectChatLog"><div class="finance-chat-msg bot">Siap bantu bahas build, tuning, upgrade, bug, dan arsitektur Adaptia.</div></div><form class="finance-form" onsubmit="projectAsk(event)"><input class="finance-input" id="projectChatInput" placeholder="Contoh: tuning obrolan Adaptia biar lebih natural" autocomplete="off"><button class="finance-button">Kirim</button></form></div>
@@ -3707,6 +3706,10 @@ function openBuildOverlay(){
 }
 function closeBuildOverlay(){
   document.getElementById('buildOverlay').classList.remove('active');
+}
+function useBuildExample(text){
+  var input=document.getElementById('buildPrompt');
+  if(input){input.value=text;input.focus();}
 }
 function selectBuildMode(mode){
   buildMode = mode;

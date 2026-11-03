@@ -1,0 +1,44 @@
+name: Deploy Adaptia from main
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Alasan deploy dari Project Builder"
+        required: false
+        default: "Deploy perubahan Builder"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: adaptia-live-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install pinned tooling
+        run: npm ci --ignore-scripts
+
+      - name: Deploy and verify Adaptia
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          umask 077
+          printf '%s' "$CLOUDFLARE_API_TOKEN" > /root/.cf-token
+          trap 'printf "" > /root/.cf-token' EXIT
+          bash adaptia.sh --dry-run
+          bash adaptia.sh
