@@ -12,6 +12,78 @@ async function adaptiaBackendExtension(request, path, method, CORS) {
     headers: { 'Content-Type': 'application/json', ...CORS }
   });
 
+  const parseMoney = (value) => {
+    const digits = String(value || '').replace(/[^0-9]/g, '');
+    const amount = Number(digits);
+    return Number.isFinite(amount) ? Math.round(amount) : 0;
+  };
+  const parseWorkspaceAction = (workspace, message, workplaceId) => {
+    const text = String(message || '').trim();
+    const lower = text.toLowerCase();
+    const moneyMatch = text.match(/(?:rp\s*)?([0-9][0-9.,]*)/i);
+    const amount = moneyMatch ? parseMoney(moneyMatch[1]) : 0;
+    const packMatch = lower.match(/(?:sebanyak\s*)?(\d+)\s*(pack|renceng|pcs|buah|unit)/i);
+    const quantity = packMatch ? Math.max(1, Number(packMatch[1])) : 1;
+    const unit = packMatch && /pack|renceng/i.test(packMatch[2]) ? 'pack' : 'satuan';
+    const expense = /(uang\s*keluar|pengeluaran|belanja|beli|pembelian|bayar)/i.test(lower);
+    const income = /(uang\s*masuk|pemasukan|terima|pendapatan|gaji)/i.test(lower);
+    if ((workspace === 'work' || workspace === 'finance') && amount > 0 && (expense || income)) {
+      let note = text.replace(/(?:rp\s*)?[0-9][0-9.,]*/ig, '')
+        .replace(/\b(cat(et|at)|uang\s*(keluar|masuk)|pengeluaran|pemasukan|belanja|beli|pembelian|bayar|terima|pendapatan|gaji|sebanyak|pack|renceng|pcs|buah|unit)\b/ig, ' ')
+        .replace(/\s+/g, ' ').trim();
+      if (!note) note = expense ? 'Belanja kerja' : 'Pemasukan';
+      return { kind: income ? 'income' : 'expense', workspace, note: note.substring(0, 160), amount, unit, quantity, workplaceId: String(workplaceId || 'mdc-bekasi').substring(0, 80) };
+    }
+    return null;
+  };
+
+  if (path === '/api/workspace/action/preview' && method === 'POST') {
+    try {
+      const body = await request.json();
+      const workspace = String(body.workspace || '').toLowerCase();
+      if (!['finance', 'work'].includes(workspace)) return json({ error: 'Workspace action tidak tersedia' }, 400);
+      const action = parseWorkspaceAction(workspace, body.message, body.workplaceId);
+      if (!action) return json({ status: 'none', message: 'Belum menemukan perintah pencatatan yang lengkap.' });
+      return json({ status: 'preview', action, explanation: action.kind === 'expense' ? 'Akan mencatat uang keluar dan memasukkan item ke log belanja.' : 'Akan mencatat uang masuk ke ledger workspace.' });
+    } catch (error) { return json({ error: error.message || 'Gagal membuat preview action' }, 500); }
+  }
+
+  if (path === '/api/workspace/action/confirm' && method === 'POST') {
+    try {
+      const body = await request.json();
+      const action = body.action || {};
+      const workspace = String(action.workspace || body.workspace || '').toLowerCase();
+      const amount = Number(action.amount);
+      const quantity = Math.max(1, Math.min(100000, Number(action.quantity) || 1));
+      const note = String(action.note || '').trim().substring(0, 160);
+      const workplaceId = String(action.workplaceId || 'mdc-bekasi').substring(0, 80);
+      if (!['finance', 'work'].includes(workspace) || !['income', 'expense'].includes(action.kind) || !note || !Number.isFinite(amount) || amount < 1 || amount > 100000000000) return json({ error: 'Action tidak valid' }, 400);
+      const now = new Date().toISOString();
+      if (workspace === 'work') {
+        let cashflow = await kvGet('work_cashflow') || [];
+        if (!Array.isArray(cashflow)) cashflow = [];
+        const entry = { id: crypto.randomUUID(), type: action.kind, note, amount: Math.round(amount), workplaceId, date: now, source: 'workspace-agent' };
+        cashflow.push(entry);
+        await kvPut('work_cashflow', cashflow.slice(-200));
+        let purchase = null;
+        if (action.kind === 'expense') {
+          let purchases = await kvGet('work_purchases') || [];
+          if (!Array.isArray(purchases)) purchases = [];
+          purchase = { id: crypto.randomUUID(), item: note, price: Math.round(amount), unit: action.unit === 'pack' ? 'pack' : 'satuan', quantity, unitPrice: action.unit === 'pack' ? Math.round(amount / quantity) : Math.round(amount), workplaceId, date: now, ts: Date.now(), source: 'workspace-agent', cashflowId: entry.id };
+          purchases.push(purchase);
+          await kvPut('work_purchases', purchases.slice(-100));
+        }
+        return json({ status: 'ok', workspace, entry, purchase });
+      }
+      let ledger = await kvGet('finance_agent_ledger') || [];
+      if (!Array.isArray(ledger)) ledger = [];
+      const entry = { id: crypto.randomUUID(), type: action.kind, note, amount: Math.round(amount), unit: action.unit === 'pack' ? 'pack' : 'satuan', quantity, date: now, source: 'finance-agent' };
+      ledger.push(entry);
+      await kvPut('finance_agent_ledger', ledger.slice(-200));
+      return json({ status: 'ok', workspace, entry });
+    } catch (error) { return json({ error: error.message || 'Gagal menyimpan action' }, 500); }
+  }
+
   if (path === '/api/backend/capabilities' && method === 'GET') {
     return json({
       status: 'ok',
