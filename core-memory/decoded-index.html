@@ -3733,29 +3733,19 @@ function buildStatusMsg(msg, type){
 async function doBuild(){
   var prompt = document.getElementById('buildPrompt').value.trim();
   if (!prompt){ buildStatusMsg('Tulis prompt dulu, cuy!', 'error'); return; }
-  buildStatusMsg('⌛ Adaptia lagi mikirin code-nya... (bisa 30-60 detik)', '');
+  buildStatusMsg('⌛ Mengirim instruksi ke Build Engine GitHub...', '');
   document.getElementById('buildPreview').classList.remove('show');
   document.getElementById('buildApplyBtn').classList.remove('show');
   buildState = null;
   try {
-    var res = await fetch('/api/build', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({prompt: prompt, mode: buildMode})
-    });
+    var res = await fetch('/api/build-engine', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt,mode:'preview'})});
     var d = await res.json();
-    if (!d.ok){ buildStatusMsg('❌ ' + (d.error || 'Gagal'), 'error'); return; }
-    buildState = {mode: d.mode, project: d.project, files: d.files || [], patches: d.patches || []};
-    if (d.mode === 'edit'){
-      buildStatusMsg('✏️ Preview edit project "' + d.project + '" — cek dulu sebelum apply!', 'ok');
-      showBuildPatches(d.patches);
-    } else {
-      buildStatusMsg('✅ Code berhasil di-generate! ' + (d.files||[]).length + ' files — preview dulu ya, baru apply.', 'ok');
-      showBuildFiles(d.files);
-    }
-  } catch(e){
-    buildStatusMsg('❌ Error: ' + e.message, 'error');
-  }
+    if (!res.ok || d.status !== 'queued') { buildStatusMsg('❌ ' + (d.error || 'Build Engine gagal dipicu'), 'error'); return; }
+    buildStatusMsg('✅ Build Engine aktif. Preview sedang diproses di GitHub Actions...', 'ok');
+    pollBuildEngineStatus();
+  } catch(e){ buildStatusMsg('❌ Error: ' + e.message, 'error'); }
 }
+async function pollBuildEngineStatus(){try{var d=await fetch('/api/build-engine/status',{cache:'no-store'}).then(function(r){return r.json();});if(d.status==='completed'){buildStatusMsg((d.conclusion==='success'?'✅':'❌')+' Build Engine selesai: '+(d.conclusion||'unknown')+(d.url?' — buka log GitHub':'') ,d.conclusion==='success'?'ok':'error');return;}if(d.status==='queued'||d.status==='in_progress'){setTimeout(pollBuildEngineStatus,5000);}}catch(e){}}
 function showBuildFiles(files){
   var pv = document.getElementById('buildPreview');
   pv.classList.add('show');

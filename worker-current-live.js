@@ -9279,6 +9279,28 @@ async function getAreaRegistryContext() {
     return new Response(JSON.stringify({greeting:g[Math.floor(Math.random()*g.length)]}),{headers:{'Content-Type':'application/json',...CORS}});
   }
 
+  if(path==='/api/build-engine'&&method==='POST'){
+    try{
+      const body=await request.json();
+      const prompt=String(body.prompt||'').trim().substring(0,4000);
+      const mode=['preview','apply','deploy'].includes(String(body.mode||''))?String(body.mode):'preview';
+      const ghToken=(typeof GITHUB_BUILD_TOKEN!=='undefined'&&GITHUB_BUILD_TOKEN)?String(GITHUB_BUILD_TOKEN):'';
+      if(!prompt) return new Response(JSON.stringify({error:'Prompt build wajib diisi'}),{status:400,headers:{'Content-Type':'application/json',...CORS}});
+      if(!ghToken) return new Response(JSON.stringify({error:'Build Engine belum terhubung ke GitHub Secret'}),{status:503,headers:{'Content-Type':'application/json',...CORS}});
+      const gh=await fetch('https://api.github.com/repos/officialtuanrayid-lab/baby-trojan-pwa/actions/workflows/adaptia-build-engine.yml/dispatches',{method:'POST',headers:{'Authorization':'Bearer '+ghToken,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','Content-Type':'application/json','User-Agent':'Adaptia-Build-Engine'},body:JSON.stringify({ref:'main',inputs:{prompt,mode}})});
+      if(!gh.ok) return new Response(JSON.stringify({error:'Gagal memicu GitHub Actions',detail:(await gh.text()).substring(0,300)}),{status:502,headers:{'Content-Type':'application/json',...CORS}});
+      return new Response(JSON.stringify({status:'queued',mode,workflow:'adaptia-build-engine.yml',message:'Build Engine sudah dipicu di GitHub Actions'}),{headers:{'Content-Type':'application/json',...CORS}});
+    }catch(e){return new Response(JSON.stringify({error:e.message||'Gagal menjalankan Build Engine'}),{status:500,headers:{'Content-Type':'application/json',...CORS}});}
+  }
+  if(path==='/api/build-engine/status'&&method==='GET'){
+    try{
+      const ghToken=(typeof GITHUB_BUILD_TOKEN!=='undefined'&&GITHUB_BUILD_TOKEN)?String(GITHUB_BUILD_TOKEN):'';
+      if(!ghToken) return new Response(JSON.stringify({error:'Build Engine belum terhubung ke GitHub Secret'}),{status:503,headers:{'Content-Type':'application/json',...CORS}});
+      const gh=await fetch('https://api.github.com/repos/officialtuanrayid-lab/baby-trojan-pwa/actions/workflows/adaptia-build-engine.yml/runs?per_page=1',{headers:{'Authorization':'Bearer '+ghToken,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','User-Agent':'Adaptia-Build-Engine'}});
+      const data=await gh.json();const run=data.workflow_runs&&data.workflow_runs[0];
+      return new Response(JSON.stringify({status:run?.status||'unknown',conclusion:run?.conclusion||null,url:run?.html_url||null,runId:run?.id||null}),{headers:{'Content-Type':'application/json',...CORS}});
+    }catch(e){return new Response(JSON.stringify({error:e.message||'Gagal membaca status Build Engine'}),{status:500,headers:{'Content-Type':'application/json',...CORS}});}
+  }
   if(path==='/api/build'&&method==='POST'){
     try{
       const body=await request.json();
