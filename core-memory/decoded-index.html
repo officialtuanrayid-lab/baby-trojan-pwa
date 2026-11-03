@@ -1533,10 +1533,10 @@ oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
     <button class="build-close" onclick="closeBuildOverlay()">✕</button>
   </div>
   <div class="build-body">
-    <div class="build-label">✦ Tulis perubahan Adaptia</div>
-    <div class="finance-muted" style="margin:-3px 0 10px">Satu prompt untuk build, tuning, atau upgrade. Adaptia akan memahami jenis perubahannya dari instruksi lo.</div>
-    <div style="position:relative"><textarea class="build-prompt-text" id="buildPrompt" placeholder="Contoh: rapikan tampilan Belanja di workspace kerjaan agar tidak terpotong, tambahkan edit dan hapus, lalu deploy ke live..." onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();doBuild();}"></textarea><div style="position:absolute;right:10px;bottom:8px;color:var(--dim);font-size:10px">Ctrl + Enter untuk kirim</div></div>
-    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px"><button class="build-btn build-btn-secondary" onclick="useBuildExample('Tuning: audit tampilan mobile Adaptia dan perbaiki bagian yang terpotong.')">Tuning UI</button><button class="build-btn build-btn-secondary" onclick="useBuildExample('Upgrade: tambahkan fitur yang paling dibutuhkan workspace project dengan tetap menjaga data yang ada.')">Upgrade fitur</button><button class="build-btn build-btn-secondary" onclick="useBuildExample('Build: buat perubahan sesuai instruksi saya dan jelaskan file yang akan berubah.')">Build perubahan</button></div>
+    <div class="build-label">✦ Sesi Adaptia</div>
+    <div class="finance-muted" style="margin:-3px 0 10px">Tulis seperti ngobrol biasa. Adaptia akan memahami sendiri tindakan yang diperlukan.</div>
+    <div id="buildChatThread" style="display:flex;flex-direction:column;gap:8px;margin:12px 0;max-height:210px;overflow:auto"></div>
+    <div style="position:relative"><textarea class="build-prompt-text" id="buildPrompt" placeholder="Tulis apa yang ingin diubah di Adaptia..." onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();doBuild();}"></textarea><div style="position:absolute;right:10px;bottom:8px;color:var(--dim);font-size:10px">Ctrl + Enter untuk kirim</div></div>
     <div style="margin-top:12px"><label for="buildExecutionMode" style="display:block;color:var(--dim);font-size:11px;margin-bottom:5px">Setelah dianalisis</label><select class="finance-input" id="buildExecutionMode"><option value="preview">Tampilkan rencana dulu</option><option value="apply">Terapkan ke GitHub</option><option value="deploy">Terapkan + deploy ke Adaptia live</option></select></div>
     <button class="build-btn build-btn-primary" style="width:100%;margin-top:10px" onclick="doBuild()">➤ Kirim ke Adaptia Builder</button>
     <div class="build-status" id="buildStatus"></div>
@@ -3698,6 +3698,7 @@ let buildMode = 'new';
 function openBuildOverlay(){
   document.getElementById('buildOverlay').classList.add('active');
   document.getElementById('buildPrompt').value = '';
+  document.getElementById('buildChatThread').innerHTML = '<div style="align-self:flex-start;max-width:92%;padding:9px 11px;border-radius:12px 12px 12px 3px;background:rgba(255,255,255,.07);color:var(--text);font-size:13px">Siap. Ceritakan perubahan yang lo mau, dengan bahasa biasa.</div>';
   buildState = null;
   document.getElementById('buildPreview').classList.remove('show');
   document.getElementById('buildStatus').className = 'build-status';
@@ -3710,6 +3711,14 @@ function closeBuildOverlay(){
 function useBuildExample(text){
   var input=document.getElementById('buildPrompt');
   if(input){input.value=text;input.focus();}
+}
+function addBuildChatMessage(text, role){
+  var thread=document.getElementById('buildChatThread');
+  if(!thread)return;
+  var bubble=document.createElement('div');
+  bubble.style.cssText='align-self:'+(role==='user'?'flex-end':'flex-start')+';max-width:92%;padding:9px 11px;border-radius:'+(role==='user'?'12px 12px 3px 12px':'12px 12px 12px 3px')+';background:'+(role==='user'?'rgba(0,212,170,.16)':'rgba(255,255,255,.07)')+';color:var(--text);font-size:13px;white-space:pre-wrap';
+  bubble.textContent=text;
+  thread.appendChild(bubble);thread.scrollTop=thread.scrollHeight;
 }
 function selectBuildMode(mode){
   buildMode = mode;
@@ -3740,6 +3749,8 @@ async function doBuild(){
   var execution=document.getElementById('buildExecutionMode'),mode=execution?execution.value:'preview';
   if(mode==='deploy'&&!confirm('Deploy akan mengubah Adaptia live setelah test. Lanjutkan?'))return;
   buildStatusMsg('⌛ Mengirim instruksi ke Build Engine GitHub...', '');
+  addBuildChatMessage(prompt,'user');
+  document.getElementById('buildPrompt').value='';
   document.getElementById('buildPreview').classList.remove('show');
   document.getElementById('buildApplyBtn').classList.remove('show');
   buildState = null;
@@ -3747,7 +3758,8 @@ async function doBuild(){
     var res = await fetch('/api/build-engine', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt,mode:mode})});
     var d = await res.json();
     if (!res.ok || d.status !== 'queued') { buildStatusMsg('❌ ' + (d.error || 'Build Engine gagal dipicu'), 'error'); return; }
-    buildStatusMsg('✅ Build Engine aktif ('+mode+'). GitHub Actions sedang memproses...', 'ok');
+    buildStatusMsg('✅ Adaptia sedang memahami dan mengerjakan instruksi...', 'ok');
+    addBuildChatMessage('Gue proses instruksinya sekarang. Hasilnya akan muncul setelah pemeriksaan selesai.','assistant');
     pollBuildEngineStatus();
   } catch(e){ buildStatusMsg('❌ Error: ' + e.message, 'error'); }
 }
